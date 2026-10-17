@@ -44,3 +44,7 @@ The homepage now prioritizes the 10-service photo grid directly below the greeti
 
 ## Version 3 urgent correction
 Removed the large intermediary banner so the 10 service cards begin immediately after the Mantru wishes ticker. Fixed a JavaScript null-selector error: the page referenced a missing `#tagline` element before rendering services, causing the 'Services could not be loaded' message. The app now guards that optional element and reports HTTP API failures more clearly.
+
+
+## Approved corporate design implementation
+Added a navy-and-orange corporate intro banner with the requested slogan, compact five-column desktop service cards, smaller service images, tablet/mobile responsive layouts, updated header CTA, and refined backgrounds, borders, shadows and spacing. Keeps the ten existing service records and direct WhatsApp enquiry links.
