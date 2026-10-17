@@ -40,3 +40,7 @@ This package is prepared for repositories where `index.html`, `app.js`, `styles.
 
 ## Update v2
 The homepage now prioritizes the 10-service photo grid directly below the greeting ticker instead of a large hero image. Founder photo uses top-aligned contain sizing to avoid cropping the head. Pre-cast wall enquiries explicitly target empty plots and farming land, with updated enquiry text and relevant exterior/land imagery. The plot buying/selling card uses a land image.
+
+
+## Version 3 urgent correction
+Removed the large intermediary banner so the 10 service cards begin immediately after the Mantru wishes ticker. Fixed a JavaScript null-selector error: the page referenced a missing `#tagline` element before rendering services, causing the 'Services could not be loaded' message. The app now guards that optional element and reports HTTP API failures more clearly.

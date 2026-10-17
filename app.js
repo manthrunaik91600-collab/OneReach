@@ -74,11 +74,12 @@ async function init() {
   setInterval(renderWishTicker, 60*60*1000);
   try {
     const res = await fetch('/api/site');
+    if (!res.ok) throw new Error(`Site API returned HTTP ${res.status}`);
     const d = await res.json();
     waNumber = d.whatsappNumber || waNumber;
     $('#brandName').textContent = (d.brand || 'One Reach').toUpperCase();
     document.title = `${d.brand || 'One Reach'} — ${d.tagline || 'Multiple business solutions'}`;
-    $('#tagline').textContent = d.tagline || '';
+    const taglineEl = $('#tagline'); if (taglineEl) taglineEl.textContent = d.tagline || '';
     $('#aboutTitle').textContent = d.aboutTitle || '';
     $('#aboutText').textContent = d.aboutText || '';
     $('#ownerName').textContent = d.ownerName || 'Mantru';
@@ -87,7 +88,8 @@ async function init() {
     $('#generalWhatsApp').href = whatsappUrl('Hi One Reach, I visited your website and would like to know more about your services.');
     renderServices(d.services || []);
   } catch(e) {
-    $('#serviceGrid').innerHTML = '<p>Services could not be loaded. Please refresh the page.</p>';
+    console.error('One Reach site load failed:', e);
+    $('#serviceGrid').innerHTML = '<p>Services are temporarily unavailable. Please refresh the page in a moment.</p>';
   }
 }
 init();
