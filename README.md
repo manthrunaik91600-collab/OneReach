@@ -48,3 +48,7 @@ Removed the large intermediary banner so the 10 service cards begin immediately 
 
 ## Approved corporate design implementation
 Added a navy-and-orange corporate intro banner with the requested slogan, compact five-column desktop service cards, smaller service images, tablet/mobile responsive layouts, updated header CTA, and refined backgrounds, borders, shadows and spacing. Keeps the ten existing service records and direct WhatsApp enquiry links.
+
+
+## Exact approved service catalogue
+The public catalogue is restricted to the user's 10 specified services only: EzzyGo Bidding For All Your Needs On Your Budget; Home Loan / Mortgage Loan / NRI Mortgage Loan / Loan Against Property; B2B & B2C Lead Generation Tool; Whole Seller & Kiran Store & General Store (Sarukula Patti Tool); ACT Fibernet New Connections; Kotak Bank 0 Balance Account; Credit Cards; Red Clay Bricks; Pre Casting Walls; Plots Buying & Selling. Service titles/subtitles are kept aligned with this approved list even if older persisted data contains prior labels.
