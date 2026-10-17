@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: one-reach
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: WHATSAPP_NUMBER
+        value: "919160086793"
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: one-reach-data
+      mountPath: /var/data
+      sizeGB: 1
