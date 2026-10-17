@@ -36,3 +36,7 @@ The homepage includes an automatic scrolling greeting ticker with India-first an
 
 ## Important: flat GitHub upload layout
 This package is prepared for repositories where `index.html`, `app.js`, `styles.css`, `admin.html`, `admin.js`, `admin.css`, and `mantru.jpg` are at the repository root. The server serves the homepage from the root and serves `/admin` from root `admin.html`.
+
+
+## Update v2
+The homepage now prioritizes the 10-service photo grid directly below the greeting ticker instead of a large hero image. Founder photo uses top-aligned contain sizing to avoid cropping the head. Pre-cast wall enquiries explicitly target empty plots and farming land, with updated enquiry text and relevant exterior/land imagery. The plot buying/selling card uses a land image.

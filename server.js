@@ -43,7 +43,24 @@ const defaults = {
 };
 
 function loadData() {
-  try { const saved = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); const merged = {...defaults, ...saved}; if (!merged.ownerPhoto || merged.ownerPhoto === '/images/mantru.jpg') merged.ownerPhoto = defaults.ownerPhoto; return merged; }
+  try {
+    const saved = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    const merged = {...defaults, ...saved};
+    if (!merged.ownerPhoto || merged.ownerPhoto === '/images/mantru.jpg') merged.ownerPhoto = defaults.ownerPhoto;
+    if (Array.isArray(saved.services)) {
+      merged.services = defaults.services.map((def, i) => {
+        const prior = saved.services.find(x => x.id === def.id) || saved.services[i] || {};
+        const item = {...def, ...prior};
+        if (def.id === 'precast' && (!prior.image || prior.image.includes('1600607687939-ce8a6c25118c'))) item.image = def.image;
+        if (def.id === 'plots' && (!prior.image || prior.image.includes('1560518883-ce09059eeffa'))) item.image = def.image;
+        if (def.id === 'precast' && (!prior.subtitle || prior.subtitle === 'A smart boundary solution')) item.subtitle = def.subtitle;
+        if (def.id === 'precast' && (!prior.description || prior.description.includes('pre-cast wall options'))) item.description = def.description;
+        if (def.id === 'precast' && (!prior.message || prior.message.includes('Pre-Casting / Pre-Cast Compound Walls'))) item.message = def.message;
+        return item;
+      });
+    }
+    return merged;
+  }
   catch { return structuredClone(defaults); }
 }
 function saveData(data) {
