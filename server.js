@@ -15,7 +15,10 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(UPLOAD_DIR));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname, { index: 'index.html', dotfiles: 'ignore', setHeaders: (res, filePath) => {
+  const blocked = ['server.js', 'package.json', 'render.yaml', 'README.md', '.gitignore'];
+  if (blocked.includes(path.basename(filePath))) res.status(404);
+}}));
 
 const defaults = {
   brand: 'One Reach',
@@ -23,7 +26,7 @@ const defaults = {
   aboutTitle: 'Business gets easier when everything connects.',
   aboutText: 'One Reach brings useful services and business opportunities together in one place. We help individuals, families, retailers and businesses connect with the right service and move forward with confidence.',
   ownerName: 'Mantru',
-  ownerPhoto: '/images/mantru.jpg',
+  ownerPhoto: '/mantru.jpg',
   contactNote: 'Tell us what you need. We will connect with you directly.',
   services: [
     {id:'ezzygo', title:'EzzyGo Bidding', subtitle:'For all your needs, on your budget', description:'Share your requirement and budget to explore suitable options through EzzyGo.', image:'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in EzzyGo Bidding for my needs and budget.'},
@@ -40,7 +43,7 @@ const defaults = {
 };
 
 function loadData() {
-  try { const saved = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); const merged = {...defaults, ...saved}; if (!merged.ownerPhoto) merged.ownerPhoto = defaults.ownerPhoto; return merged; }
+  try { const saved = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); const merged = {...defaults, ...saved}; if (!merged.ownerPhoto || merged.ownerPhoto === '/images/mantru.jpg') merged.ownerPhoto = defaults.ownerPhoto; return merged; }
   catch { return structuredClone(defaults); }
 }
 function saveData(data) {
@@ -101,7 +104,7 @@ app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({error:'Choose an image first.'});
   res.json({ok:true, url:'/uploads/' + req.file.filename});
 });
-app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.use((err, _req, res, _next) => {
   res.status(400).json({error: err.message || 'Request failed.'});
 });

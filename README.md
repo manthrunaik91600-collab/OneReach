@@ -32,3 +32,7 @@ Do not double-click `public/index.html` or `public/admin.html` directly. Their A
 
 ## Mantru daily wishes ticker
 The homepage includes an automatic scrolling greeting ticker with India-first and worldwide calendars. It updates from the India (Asia/Kolkata) date without manual daily editing. The included calendar is a starter list of fixed-date observances and generic daily wishes; movable festival dates and additional verified observances should be maintained in the calendar data rather than guessed. Mantru's supplied photo is included at `public/images/mantru.jpg` and is used in About Us and the founder footer.
+
+
+## Important: flat GitHub upload layout
+This package is prepared for repositories where `index.html`, `app.js`, `styles.css`, `admin.html`, `admin.js`, `admin.css`, and `mantru.jpg` are at the repository root. The server serves the homepage from the root and serves `/admin` from root `admin.html`.
