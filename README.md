@@ -56,3 +56,7 @@ The public catalogue is restricted to the user's 10 specified services only: Ezz
 
 ## Reference design refinement
 Updated the header brand mark to a custom OR monogram, refined the navy/orange cityscape hero, and replaced the flat white service area with a pale blue geometric/gradient background and warm enquiry strips. Kept exactly the user's 10 approved services.
+
+
+## Add more service cards from Admin
+Open `/admin`, sign in with `ADMIN_PASSWORD`, choose **Services & Add New**, and select **Add New Service**. Each service supports title, subtitle, description, image upload/image URL and a prefilled WhatsApp message. Save all changes to publish. The original 10 services are retained; up to 90 additional cards are supported. Render persistent disk should be mounted at `/var/data` with `DATA_DIR=/var/data` so service content and uploaded images survive redeploys.

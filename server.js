@@ -48,24 +48,34 @@ function loadData() {
     const merged = {...defaults, ...saved};
     if (!merged.ownerPhoto || merged.ownerPhoto === '/images/mantru.jpg') merged.ownerPhoto = defaults.ownerPhoto;
     if (Array.isArray(saved.services)) {
-      merged.services = defaults.services.map((def, i) => {
-        const prior = saved.services.find(x => x.id === def.id) || saved.services[i] || {};
-        const item = {...def, ...prior};
-        // Keep the public catalogue restricted to the owner's exact 10 approved services.
-        item.title = def.title;
-        item.subtitle = def.subtitle;
-        if (!String(prior.image || '').startsWith('/uploads/')) item.image = def.image;
-        if (def.id === 'precast' && (!prior.image || prior.image.includes('1600607687939-ce8a6c25118c'))) item.image = def.image;
-        if (def.id === 'plots' && (!prior.image || prior.image.includes('1560518883-ce09059eeffa'))) item.image = def.image;
+      const savedById = new Map(saved.services.filter(x => x && x.id).map(x => [String(x.id), x]));
+      const baseServices = defaults.services.map(def => {
+        const prior = savedById.get(def.id) || saved.services.find(x => x && x.title === def.title) || {};
+        const item = {...def, ...prior, id:def.id};
+        // Keep the ten original cards in their agreed order, while preserving admin edits.
+        if (!String(prior.image || '').startsWith('/uploads/') && (!prior.image || prior.image.startsWith('https://images.unsplash.com/'))) {
+          item.image = def.image;
+        }
         if (def.id === 'precast' && (!prior.subtitle || prior.subtitle === 'A smart boundary solution')) item.subtitle = def.subtitle;
         if (def.id === 'precast' && (!prior.description || prior.description.includes('pre-cast wall options'))) item.description = def.description;
         if (def.id === 'precast' && (!prior.message || prior.message.includes('Pre-Casting / Pre-Cast Compound Walls'))) item.message = def.message;
         return item;
       });
+      const known = new Set(defaults.services.map(x => x.id));
+      const extras = saved.services.filter(x => x && x.id && !known.has(String(x.id))).map(x => ({
+        id:String(x.id).slice(0,80),
+        title:String(x.title || 'New service').slice(0,120),
+        subtitle:String(x.subtitle || '').slice(0,180),
+        description:String(x.description || '').slice(0,1200),
+        image:String(x.image || '').slice(0,1000),
+        message:String(x.message || '').slice(0,1200)
+      }));
+      merged.services = [...baseServices, ...extras];
+    } else {
+      merged.services = defaults.services;
     }
     return merged;
-  }
-  catch { return structuredClone(defaults); }
+  } catch { return structuredClone(defaults); }
 }
 function saveData(data) {
   const temp = DATA_FILE + '.tmp';
@@ -108,15 +118,31 @@ app.put('/api/admin/site', auth, (req, res) => {
   for (const key of ['brand','tagline','aboutTitle','aboutText','ownerName','ownerPhoto','contactNote']) {
     if (typeof incoming[key] === 'string') current[key] = incoming[key].slice(0, 5000);
   }
-  if (Array.isArray(incoming.services) && incoming.services.length === 10) {
-    current.services = incoming.services.map((s, i) => ({
-      ...current.services[i],
-      title: String(s.title || '').slice(0,120),
-      subtitle: String(s.subtitle || '').slice(0,180),
-      description: String(s.description || '').slice(0,1200),
-      image: String(s.image || '').slice(0,1000),
-      message: String(s.message || '').slice(0,1200)
-    }));
+  if (Array.isArray(incoming.services) && incoming.services.length >= 10 && incoming.services.length <= 100) {
+    const seen = new Set();
+    const services = [];
+    for (const s of incoming.services) {
+      if (!s || !String(s.id || '').trim()) continue;
+      const id = String(s.id).trim().slice(0,80);
+      if (seen.has(id)) return res.status(400).json({error:'Service IDs must be unique. Please check the service cards.'});
+      seen.add(id);
+      const title = String(s.title || '').trim().slice(0,120);
+      if (!title) return res.status(400).json({error:'Every service needs a title.'});
+      services.push({
+        id,
+        title,
+        subtitle:String(s.subtitle || '').slice(0,180),
+        description:String(s.description || '').slice(0,1200),
+        image:String(s.image || '').slice(0,1000),
+        message:String(s.message || '').slice(0,1200)
+      });
+    }
+    if (services.length < 10) return res.status(400).json({error:'The original 10 services must remain on the website.'});
+    const requiredIds = defaults.services.map(s => s.id);
+    if (!requiredIds.every(id => services.some(s => s.id === id))) {
+      return res.status(400).json({error:'Please keep all original 10 services. You can add new services below them.'});
+    }
+    current.services = services;
   }
   saveData(current);
   res.json({ok:true, data:current});

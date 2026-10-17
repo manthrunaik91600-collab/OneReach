@@ -14,7 +14,8 @@ async function api(url, options={}) {
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault(); $('#loginError').textContent='';
   const pass=$('#password').value;
-  try { await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');return d;});
+  try {
+    await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');return d;});
     adminPassword=pass; siteData=await (await fetch('/api/site')).json();
   } catch(e) {
     if(e.message.includes('404')) { try { siteData=await (await fetch('/api/site')).json(); } catch(_){} }
@@ -22,20 +23,34 @@ $('#loginForm').addEventListener('submit',async e=>{
   }
   $('#loginPanel').hidden=true;$('#editorPanel').hidden=false;fillForm();
 });
-/* Public site data is readable; admin auth protects all writes. */
-async function loadAdminData(){siteData=await (await fetch('/api/site')).json();fillForm();}
 function fillForm(){
   const f=$('#siteForm');
   ['brand','tagline','aboutTitle','ownerName','aboutText','contactNote'].forEach(k=>{f.elements[k].value=siteData[k]||'';});
   if(siteData.ownerPhoto){$('#ownerPreview').src=siteData.ownerPhoto;$('#ownerPreview').hidden=false;}
-  $('#serviceEditors').innerHTML=siteData.services.map((s,i)=>`
-    <div class="service-editor" data-index="${i}">
-      <div class="service-editor-head"><span class="num">${String(i+1).padStart(2,'0')}</span><strong>${esc(s.title)}</strong></div>
+  renderServiceEditors();
+}
+function renderServiceEditors(){
+  const list=siteData.services||[];
+  $('#serviceEditors').innerHTML=list.map((s,i)=>`
+    <div class="service-editor" data-index="${i}" data-id="${esc(s.id)}">
+      <div class="service-editor-head"><span class="num">${String(i+1).padStart(2,'0')}</span><strong>${esc(s.title||'New service')}</strong>
+      ${i>=10?'<button type="button" class="remove-service secondary" data-remove="'+esc(s.id)+'">Remove added service</button>':''}</div>
       <div class="fields two"><label>Service title<input data-key="title" value="${esc(s.title)}" maxlength="120" required></label><label>Short subtitle<input data-key="subtitle" value="${esc(s.subtitle)}" maxlength="180"></label></div>
       <label>Description<textarea data-key="description" rows="3" maxlength="1200">${esc(s.description)}</textarea></label>
-      <label>WhatsApp prefilled enquiry message<textarea data-key="message" rows="3" maxlength="1200">${esc(s.message)}</textarea></label>
-      <div class="service-image-controls"><div><label>Service photo<input type="file" data-upload="${i}" accept="image/jpeg,image/png,image/webp,image/gif"></label><label>Or image URL<input data-key="image" value="${esc(s.image)}" maxlength="1000"></label></div><img class="preview" src="${esc(s.image)}" alt="Service photo preview" onerror="this.style.opacity='.25'"></div>
+      <label>WhatsApp prefilled enquiry message<textarea data-key="message" rows="3" maxlength="1200">${esc(s.message)}</textarea><small class="field-hint">This exact message opens in your WhatsApp when a visitor clicks this service.</small></label>
+      <div class="service-image-controls"><div><label>Upload service photo<input type="file" data-upload="${i}" accept="image/jpeg,image/png,image/webp,image/gif"></label><label>Or image URL<input data-key="image" value="${esc(s.image)}" maxlength="1000" placeholder="https://… or /uploads/…"></label></div><img class="preview" src="${esc(s.image)}" alt="Service photo preview" onerror="this.style.opacity='.25'"></div>
     </div>`).join('');
+  $('#serviceCount').textContent=`${list.length} service${list.length===1?'':'s'} configured`;
+  $('#addService').disabled=list.length>=100;
+}
+function collectServices(){
+  const cards=$$('.service-editor');
+  return cards.map(card=>{
+    const existing=siteData.services.find(s=>s.id===card.dataset.id)||{};
+    const item={...existing};
+    card.querySelectorAll('[data-key]').forEach(el=>item[el.dataset.key]=el.value);
+    return item;
+  });
 }
 $$('.tab').forEach(btn=>btn.addEventListener('click',()=>{ $$('.tab').forEach(b=>b.classList.toggle('active',b===btn));$$('[data-section]').forEach(s=>s.hidden=s.dataset.section!==btn.dataset.tab);}));
 async function uploadFile(file){
@@ -49,11 +64,34 @@ $('#ownerPhotoFile').addEventListener('change',async e=>{
 });
 $('#serviceEditors').addEventListener('change',async e=>{
   const input=e.target;
-  if(!input.matches('input[type=file][data-upload]'))return;
-  const file=input.files[0];if(!file)return;
-  const card=input.closest('.service-editor');const preview=card.querySelector('.preview');const urlField=card.querySelector('[data-key=image]');
-  try{setStatus('Uploading service photo…');const url=await uploadFile(file);urlField.value=url;preview.src=url;setStatus('Photo uploaded. Click Save all changes.');}
-  catch(err){setStatus(err.message,true);}
+  if(input.matches('input[type=file][data-upload]')){
+    const file=input.files[0];if(!file)return;
+    const card=input.closest('.service-editor');const preview=card.querySelector('.preview');const urlField=card.querySelector('[data-key=image]');
+    try{setStatus('Uploading service photo…');const url=await uploadFile(file);urlField.value=url;preview.src=url;setStatus('Photo uploaded. Click Save all changes.');}
+    catch(err){setStatus(err.message,true);}
+  }
+  if(input.matches('[data-key=title]')) {
+    input.closest('.service-editor').querySelector('.service-editor-head strong').textContent=input.value||'New service';
+  }
+});
+$('#addService').addEventListener('click',()=>{
+  if(siteData.services.length>=100)return;
+  const id='custom-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+  siteData.services.push({id,title:'New Service',subtitle:'Add a short subtitle',description:'Describe this service and who it helps.',image:'',message:'Hi One Reach, I am interested in [service name]. Please share more details.'});
+  renderServiceEditors();
+  setStatus('New service card added. Fill in the details and click Save all changes.');
+  const last=$$('.service-editor').at(-1);
+  last?.scrollIntoView({behavior:'smooth',block:'start'});
+  last?.querySelector('[data-key=title]')?.focus();
+});
+$('#serviceEditors').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-remove]');
+  if(!btn)return;
+  const id=btn.dataset.remove;
+  if(!confirm('Remove this added service from the website? This will apply after saving.'))return;
+  siteData.services=siteData.services.filter(s=>s.id!==id);
+  renderServiceEditors();
+  setStatus('Added service removed from editor. Click Save all changes to publish.');
 });
 $('#siteForm').addEventListener('submit',async e=>{
   e.preventDefault();const button=e.submitter;button.disabled=true;setStatus('Saving…');
@@ -62,13 +100,9 @@ $('#siteForm').addEventListener('submit',async e=>{
     const out={};
     ['brand','tagline','aboutTitle','ownerName','aboutText','contactNote'].forEach(k=>out[k]=f.elements[k].value);
     out.ownerPhoto=siteData.ownerPhoto||'';
-    out.services=siteData.services.map((s,i)=>{
-      const card=$(`.service-editor[data-index="${i}"]`);const item={...s};
-      card.querySelectorAll('[data-key]').forEach(el=>item[el.dataset.key]=el.value);
-      return item;
-    });
+    out.services=collectServices();
     const result=await api('/api/admin/site',{method:'PUT',body:JSON.stringify(out)});
-    siteData=result.data;setStatus('Saved successfully. Public website updated.');
+    siteData=result.data;renderServiceEditors();setStatus('Saved successfully. Public website updated.');
   }catch(err){setStatus(err.message,true);}
   finally{button.disabled=false;}
 });
