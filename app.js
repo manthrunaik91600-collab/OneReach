@@ -9,8 +9,8 @@ function escapeHtml(s='') {
 function renderServices(services) {
   $('#serviceGrid').innerHTML = services.map((s,i)=>`
     <a class="service-card" href="${whatsappUrl(s.message || `Hi One Reach, I am interested in ${s.title}. Please contact me.`)}" target="_blank" rel="noopener" aria-label="Enquire about ${escapeHtml(s.title)} on WhatsApp">
-      <div class="service-image"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=80'"><span class="service-index">SERVICE / ${String(i+1).padStart(2,'0')}</span><span class="service-arrow">↗</span></div>
-      <div class="service-content"><h3>${escapeHtml(s.title)}</h3><div class="service-subtitle">${escapeHtml(s.subtitle)}</div><p>${escapeHtml(s.description)}</p><div class="service-action"><span>Enquire on WhatsApp</span><span>↗</span></div></div>
+      <div class="service-image"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=80'"><span class="service-index">SERVICE / ${String(i+1).padStart(2,'0')}</span></div>
+      <div class="service-content"><h3>${escapeHtml(s.title)}</h3><div class="service-subtitle">${escapeHtml(s.subtitle)}</div><p>${escapeHtml(s.description)}</p><div class="service-action"><span><b class="whatsapp-mark">◉</b> Enquire on WhatsApp</span><span class="service-action-arrow">›</span></div></div>
     </a>`).join('');
 }
 // Calendar dates use India (Asia/Kolkata) as the primary date. Movable religious festivals
