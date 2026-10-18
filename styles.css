@@ -275,3 +275,26 @@ body{background:#f5f7fb}
 .site-footer>small{font-size:12px;white-space:nowrap;color:#e2eaf7!important}
 @media(max-width:1100px){.site-footer{flex-wrap:wrap;justify-content:center;text-align:center}.site-footer>span,.site-footer>small{white-space:normal}.site-footer>div{gap:18px}}
 @media(max-width:700px){.brand-mark{width:49px!important;height:40px!important;flex-basis:49px!important}.site-header .brand{gap:7px}.site-header .brand strong,.site-footer .footer-brand strong{font-size:14px!important;letter-spacing:.2px!important}.site-header .brand small,.site-footer .footer-brand small{font-size:7px!important;letter-spacing:.8px!important}.site-footer{gap:13px;padding:20px 4%}.site-footer>span{font-size:11px}.site-footer>div{gap:15px}.site-footer>div a,.site-footer>small{font-size:11px}}
+
+/* Exact approved reference image assets: preserve the original blue/gold logo artwork and layout. */
+.reference-brand-logo{display:block!important;object-fit:contain!important;max-width:none!important;flex:none!important;border:0!important;box-shadow:none!important}
+.site-header .header-reference-logo{width:340px!important;height:auto!important;max-height:72px!important}
+.site-header .brand{display:flex!important;align-items:center!important;gap:0!important}
+.site-footer .footer-reference-logo{width:320px!important;height:auto!important;max-height:76px!important}
+.site-footer .footer-brand{display:flex!important;align-items:center!important;flex:0 0 320px!important;gap:0!important;min-width:0!important}
+@media(max-width:1250px){.site-header .header-reference-logo{width:300px!important}.site-footer .footer-reference-logo{width:280px!important}.site-footer .footer-brand{flex-basis:280px!important}}
+@media(max-width:700px){.site-header .header-reference-logo{width:min(52vw,235px)!important;max-height:60px!important}.site-footer .footer-reference-logo{width:min(72vw,300px)!important;max-height:70px!important}.site-footer .footer-brand{flex-basis:auto!important}}
+/* Final screenshot alignment: use the approved reference logo artwork and card photos exactly. */
+.site-header .header-reference-logo{width:360px!important;max-height:73px!important}
+.site-footer .footer-reference-logo{width:336px!important;max-height:69px!important}
+.site-footer .footer-brand{flex-basis:336px!important}
+.brand-hero{min-height:202px!important;padding-top:28px!important;padding-bottom:22px!important}
+.brand-hero h1{font-size:clamp(36px,3.45vw,56px)!important;line-height:1.03!important;margin-top:17px!important}
+.hero-signature{margin-top:64px!important;min-height:84px!important}
+.service-card{min-height:270px!important}
+.service-image{height:145px!important;flex-basis:145px!important}
+/* The reference card crops already contain their SERVICE / NN labels. */
+.service-image .service-index{display:none!important}
+@media(min-width:1500px){.service-card{min-height:270px!important}.service-image{height:145px!important;flex-basis:145px!important}}
+@media(max-width:1250px){.site-header .header-reference-logo{width:300px!important}.site-footer .footer-reference-logo{width:280px!important}.site-footer .footer-brand{flex-basis:280px!important}.brand-hero{min-height:202px!important}}
+@media(max-width:700px){.site-header .header-reference-logo{width:min(52vw,235px)!important;max-height:60px!important}.site-footer .footer-reference-logo{width:min(72vw,300px)!important;max-height:70px!important}.site-footer .footer-brand{flex-basis:auto!important}.brand-hero{min-height:0!important;padding-top:23px!important;padding-bottom:24px!important}.service-image{height:100px!important;flex-basis:100px!important}.service-card{min-height:0!important}}
