@@ -64,3 +64,7 @@ Open `/admin`, sign in with `ADMIN_PASSWORD`, choose **Services & Add New**, and
 
 ## Daily website visitor analytics
 After deployment, the public homepage sends a privacy-conscious visit event to `/api/analytics/visit`. The server stores India-time daily page views and daily unique visitor estimates in `daily-visits.json` under `DATA_DIR`. Admin login → **Website Visitors** shows daily rows and totals for the most recent 366 recorded dates. Unique visitors are estimated from a random browser ID stored locally; the server stores only its SHA-256 hash and does not store names, phone numbers or IP addresses. Keep Render Persistent Disk mounted at `/var/data` and `DATA_DIR=/var/data`; without persistent storage, analytics history may reset on redeploy. The counter begins after this version is deployed; earlier visits cannot be reconstructed.
+
+
+## One-page About Us update
+The public homepage now includes a complete About Us section in the same page. The header About Us link scrolls to the founder story, vision, mission, values, goals and Why One Reach sections. Founder name is Mantru K and the supplied founder photo is stored as `mantru.jpg`. The contact section and footer remain on the same page.

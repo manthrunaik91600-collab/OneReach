@@ -106,14 +106,14 @@ async function init() {
     if (!res.ok) throw new Error(`Site API returned HTTP ${res.status}`);
     const d = await res.json();
     waNumber = d.whatsappNumber || waNumber;
-    $('#brandName').textContent = (d.brand || 'One Reach').toUpperCase();
+    const brandNameEl = $('#brandName'); if (brandNameEl) brandNameEl.textContent = (d.brand || 'One Reach').toUpperCase();
     document.title = `${d.brand || 'One Reach'} — ${d.tagline || 'Multiple business solutions'}`;
     const taglineEl = $('#tagline'); if (taglineEl) taglineEl.textContent = d.tagline || '';
-    $('#aboutTitle').textContent = d.aboutTitle || '';
-    $('#aboutText').textContent = d.aboutText || '';
-    $('#ownerName').textContent = d.ownerName || 'Mantru';
-    $('#contactNote').textContent = d.contactNote || '';
-    if (d.ownerPhoto) $('#ownerPhoto').src = d.ownerPhoto;
+    $('#aboutTitle').textContent = 'One Reach. Many Possibilities.';
+    $('#aboutText').textContent = 'One Reach brings useful services and practical opportunities together in one trusted place. From finance and business leads to everyday services, building materials and property enquiries, our aim is to help people reach the right information and the right conversation with confidence.';
+    const ownerNameEl = $('#ownerName'); if (ownerNameEl) ownerNameEl.textContent = 'Mantru K';
+    $('#contactNote').textContent = 'Tell us what you need. We will connect you with the right next step.';
+    $('#ownerPhoto').src = '/mantru.jpg';
     $('#generalWhatsApp').href = whatsappUrl('Hi One Reach, I visited your website and would like to know more about your services.');
     renderServices(d.services || []);
   } catch(e) {
