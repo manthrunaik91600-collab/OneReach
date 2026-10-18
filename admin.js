@@ -21,7 +21,7 @@ $('#loginForm').addEventListener('submit',async e=>{
     if(e.message.includes('404')) { try { siteData=await (await fetch('/api/site')).json(); } catch(_){} }
     if(!siteData) { $('#loginError').textContent=e.message; return; }
   }
-  $('#loginPanel').hidden=true;$('#editorPanel').hidden=false;fillForm();
+  $('#loginPanel').hidden=true;$('#editorPanel').hidden=false;fillForm();loadAnalytics();
 });
 function fillForm(){
   const f=$('#siteForm');
@@ -108,3 +108,21 @@ $('#siteForm').addEventListener('submit',async e=>{
 });
 function setStatus(text,error=false){$('#saveStatus').textContent=text;$('#saveStatus').style.color=error?'#bd3030':'';}
 $('#logout').addEventListener('click',()=>{adminPassword='';siteData=null;$('#editorPanel').hidden=true;$('#loginPanel').hidden=false;$('#password').value='';});
+
+async function loadAnalytics(){
+  const status=$('#analyticsStatus');
+  if(!status)return;
+  status.textContent='Loading daily visitor report…';
+  try{
+    const data=await api('/api/admin/analytics');
+    $('#totalPageViews').textContent=Number(data.totals?.pageViews||0).toLocaleString('en-IN');
+    $('#totalUniqueVisitors').textContent=Number(data.totals?.uniqueVisitors||0).toLocaleString('en-IN');
+    const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const todayRow=(data.days||[]).find(d=>d.date===today)||{pageViews:0,uniqueVisitors:0};
+    $('#todayPageViews').textContent=Number(todayRow.pageViews||0).toLocaleString('en-IN');
+    $('#todayUniqueVisitors').textContent=Number(todayRow.uniqueVisitors||0).toLocaleString('en-IN');
+    $('#analyticsRows').innerHTML=(data.days||[]).length?(data.days.map(d=>`<tr><td>${esc(d.date)}</td><td>${Number(d.pageViews||0).toLocaleString('en-IN')}</td><td>${Number(d.uniqueVisitors||0).toLocaleString('en-IN')}</td></tr>`).join('')):'<tr><td colspan="3">No visits recorded yet. Open the public website in a new tab to create the first record.</td></tr>';
+    status.textContent='Updated just now · Dates use India time.';
+  }catch(err){status.textContent='Could not load report: '+err.message;}
+}
+$('#refreshAnalytics')?.addEventListener('click',loadAnalytics);

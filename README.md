@@ -60,3 +60,7 @@ Updated the header brand mark to a custom OR monogram, refined the navy/orange c
 
 ## Add more service cards from Admin
 Open `/admin`, sign in with `ADMIN_PASSWORD`, choose **Services & Add New**, and select **Add New Service**. Each service supports title, subtitle, description, image upload/image URL and a prefilled WhatsApp message. Save all changes to publish. The original 10 services are retained; up to 90 additional cards are supported. Render persistent disk should be mounted at `/var/data` with `DATA_DIR=/var/data` so service content and uploaded images survive redeploys.
+
+
+## Daily website visitor analytics
+After deployment, the public homepage sends a privacy-conscious visit event to `/api/analytics/visit`. The server stores India-time daily page views and daily unique visitor estimates in `daily-visits.json` under `DATA_DIR`. Admin login → **Website Visitors** shows daily rows and totals for the most recent 366 recorded dates. Unique visitors are estimated from a random browser ID stored locally; the server stores only its SHA-256 hash and does not store names, phone numbers or IP addresses. Keep Render Persistent Disk mounted at `/var/data` and `DATA_DIR=/var/data`; without persistent storage, analytics history may reset on redeploy. The counter begins after this version is deployed; earlier visits cannot be reconstructed.

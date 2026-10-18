@@ -67,7 +67,15 @@ function renderWishTicker(){
  const all=[...lines,...lines];
  el.innerHTML=all.map(t=>`<span>${escapeHtml(t)}</span>`).join('');
 }
+function recordVisit(){
+  try {
+    let visitorId=localStorage.getItem('oneReachVisitorId');
+    if(!visitorId){visitorId='or_'+Array.from(crypto.getRandomValues(new Uint8Array(18))).map(n=>n.toString(16).padStart(2,'0')).join('');localStorage.setItem('oneReachVisitorId',visitorId);}
+    fetch('/api/analytics/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visitorId}),keepalive:true}).catch(()=>{});
+  } catch (_) { /* Analytics is optional when browser storage is disabled. */ }
+}
 async function init() {
+  recordVisit();
   $('#year').textContent = new Date().getFullYear();
   renderWishTicker();
   // Refresh after midnight India time, without requiring a site content edit.

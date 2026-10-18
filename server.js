@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 const DATA_FILE = path.join(DATA_DIR, 'site-data.json');
+const ANALYTICS_FILE = path.join(DATA_DIR, 'daily-visits.json');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const WA_NUMBER = (process.env.WHATSAPP_NUMBER || '919160086793').replace(/\D/g, '');
 
@@ -33,11 +34,11 @@ const defaults = {
     {id:'loans', title:'Home Loan | Mortgage Loan | NRI Mortgage Loan | Loan Against Property', subtitle:'Home Loan • Mortgage Loan • NRI Mortgage Loan • Loan Against Property', description:'Enquire about home loans, mortgage loans, NRI mortgage loans and loan against property.', image:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in Home Loan / Mortgage Loan / NRI Mortgage Loan / Loan Against Property. Please contact me.'},
     {id:'leads', title:'B2B & B2C Lead Generation Tool', subtitle:'B2B and B2C business leads', description:'Explore a business lead-generation tool for finding relevant business prospects and organizing leads.', image:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in the B2B & B2C Lead Generation Tool. Please share details.'},
     {id:'kirana', title:'Whole Seller & Kiran Store & General Store', subtitle:'Sarukula Patti Tool', description:'A practical tool concept for wholesalers, kirana stores and general stores to manage product lists and requirements.', image:'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in the Wholesale / Kirana Store / General Store Sarukula Patti Tool.'},
-    {id:'act-fibernet', title:'ACT Fibernet New Connections', subtitle:'New ACT Fibernet connections', description:'Request information about a new ACT Fibernet connection and available plans in your area.', image:'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in a new ACT Fibernet connection. Please contact me.'},
-    {id:'kotak', title:'Kotak Bank 0 Balance Account', subtitle:'Zero-balance account enquiry', description:'Ask for current eligibility, account features and the official account-opening process.', image:'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in a Kotak Bank zero-balance account. Please share details.'},
+    {id:'act-fibernet', title:'ACT Fibernet New Connections', subtitle:'New ACT Fibernet connections', description:'Request information about a new ACT Fibernet connection and available plans in your area.', image:'https://static.toiimg.com/thumb/msid-125814947,width-1280,height-720,resizemode-4/125814947.jpg', message:'Hi One Reach, I am interested in a new ACT Fibernet connection. Please contact me.'},
+    {id:'kotak', title:'Kotak Bank 0 Balance Account', subtitle:'Zero-balance account enquiry', description:'Ask for current eligibility, account features and the official account-opening process.', image:'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/09/f9/7f/09f97f48-d7a9-2435-8a5a-6ebd36a600df/AppIcon-1x_U007emarketing-0-7-0-85-220-0.png/1200x630wa.png', message:'Hi One Reach, I am interested in a Kotak Bank zero-balance account. Please share details.'},
     {id:'credit-cards', title:'Credit Cards', subtitle:'Credit card enquiry', description:'Enquire about credit-card options, eligibility criteria, fees and application requirements.', image:'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in Credit Cards. Please contact me with available options.'},
-    {id:'bricks', title:'Red Clay Bricks', subtitle:'Red clay brick supply enquiries', description:'Share your project location and quantity requirement to enquire about red clay bricks.', image:'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in Red Clay Bricks. Please share pricing and availability.'},
-    {id:'precast', title:'Pre Casting Walls', subtitle:'Pre-cast walls for plots and farming lands', description:'Enquire about pre-cast wall options for your plot, home, farm or commercial property.', image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in Pre-Casting / Pre-Cast Compound Walls. Please contact me.'},
+    {id:'bricks', title:'Red Clay Bricks', subtitle:'Red clay brick supply enquiries', description:'Share your project location and quantity requirement to enquire about red clay bricks.', image:'https://solusipasir.com/asset_img/jual-batu-bata-merah-siap-kirim-24-jam-jabodetabek.webp', message:'Hi One Reach, I am interested in Red Clay Bricks. Please share pricing and availability.'},
+    {id:'precast', title:'Pre Casting Walls', subtitle:'Pre-cast walls for plots and farming lands', description:'Enquire about pre-cast wall options for your plot, home, farm or commercial property.', image:'https://www.mohiraprecast.com/images/img/index6.jpg', message:'Hi One Reach, I am interested in Pre-Casting / Pre-Cast Compound Walls. Please contact me.'},
     {id:'plots', title:'Plots Buying & Selling', subtitle:'Plot buying and selling enquiries', description:'Tell us whether you want to buy or sell a plot, your preferred location and budget.', image:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in buying or selling plots. Please contact me.'}
   ]
 };
@@ -84,6 +85,25 @@ function saveData(data) {
 }
 if (!fs.existsSync(DATA_FILE)) saveData(defaults);
 
+// Privacy-conscious daily analytics: store a random browser ID hash only, never names,
+// phone numbers, IP addresses, or full browsing fingerprints. Render disk keeps history.
+function indiaDayKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(date);
+  const get = type => parts.find(p => p.type === type)?.value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+function loadAnalytics() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf8'));
+    return raw && typeof raw === 'object' && raw.days && typeof raw.days === 'object' ? raw : {days:{}};
+  } catch { return {days:{}}; }
+}
+function saveAnalytics(data) {
+  const temp = ANALYTICS_FILE + '.tmp';
+  fs.writeFileSync(temp, JSON.stringify(data));
+  fs.renameSync(temp, ANALYTICS_FILE);
+}
+
 function auth(req, res, next) {
   const token = req.headers['x-admin-password'];
   if (!ADMIN_PASSWORD) return res.status(503).json({error:'Admin is not configured. Set ADMIN_PASSWORD in Render Environment.'});
@@ -103,6 +123,36 @@ const upload = multer({storage, limits:{fileSize: 8 * 1024 * 1024}, fileFilter: 
 }});
 
 app.get('/api/health', (_req, res) => res.json({ok:true, service:'One Reach'}));
+app.post('/api/analytics/visit', (req, res) => {
+  const visitorId = String((req.body || {}).visitorId || '').trim();
+  // Accept only a generated opaque ID; ignore malformed values.
+  if (!/^[a-zA-Z0-9_-]{16,100}$/.test(visitorId)) return res.status(400).json({error:'Invalid visitor ID'});
+  const day = indiaDayKey();
+  const analytics = loadAnalytics();
+  if (!analytics.days[day]) analytics.days[day] = {pageViews:0, uniqueVisitors:0, visitorHashes:[]};
+  const record = analytics.days[day];
+  if (!Array.isArray(record.visitorHashes)) record.visitorHashes = [];
+  record.pageViews = (Number(record.pageViews) || 0) + 1;
+  const crypto = require('crypto');
+  const hash = crypto.createHash('sha256').update(visitorId).digest('hex');
+  if (!record.visitorHashes.includes(hash)) {
+    record.visitorHashes.push(hash);
+    record.uniqueVisitors = record.visitorHashes.length;
+  } else {
+    record.uniqueVisitors = record.visitorHashes.length;
+  }
+  saveAnalytics(analytics);
+  res.json({ok:true});
+});
+app.get('/api/admin/analytics', auth, (_req, res) => {
+  const analytics = loadAnalytics();
+  const days = Object.entries(analytics.days).map(([date, value]) => ({
+    date,
+    pageViews:Number(value.pageViews)||0,
+    uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : (Number(value.uniqueVisitors)||0)
+  })).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,366);
+  res.json({ok:true, days, totals:days.reduce((acc,d)=>({pageViews:acc.pageViews+d.pageViews, uniqueVisitors:acc.uniqueVisitors+d.uniqueVisitors}),{pageViews:0,uniqueVisitors:0})});
+});
 app.get('/api/site', (_req, res) => {
   const data = loadData();
   res.json({whatsappNumber:WA_NUMBER, brand:data.brand, tagline:data.tagline, aboutTitle:data.aboutTitle, aboutText:data.aboutText, ownerName:data.ownerName, ownerPhoto:data.ownerPhoto, contactNote:data.contactNote, services:data.services});
