@@ -300,11 +300,11 @@ body{background:#f5f7fb}
 @media(max-width:700px){.site-header .header-reference-logo{width:min(52vw,235px)!important;max-height:60px!important}.site-footer .footer-reference-logo{width:min(72vw,300px)!important;max-height:70px!important}.site-footer .footer-brand{flex-basis:auto!important}.brand-hero{min-height:0!important;padding-top:23px!important;padding-bottom:24px!important}.service-image{height:100px!important;flex-basis:100px!important}.service-card{min-height:0!important}}
 
 
-/* One-page About Us section: visible on the homepage and reachable by the header anchor. */
-.about-section.about-expanded{display:grid!important;grid-template-columns:minmax(280px,.82fr) minmax(0,1.18fr);gap:5%;align-items:start;padding:64px 6.4%;background:linear-gradient(135deg,#e7f1ff 0%,#f9fbff 60%,#eaf3ff 100%);scroll-margin-top:84px}
-.about-expanded .about-visual{position:sticky;top:100px;padding:0 12px 16px 0}
-.about-expanded .about-image-wrap{height:auto;aspect-ratio:4/5;max-height:600px;background:#dbe5f2;border-radius:22px;box-shadow:0 22px 55px #0b2b5018}
-.about-expanded .about-image-wrap img{object-fit:cover;object-position:center 20%;width:100%;height:100%}
+/* Continuous homepage About Us section; founder photo deliberately kept compact. */
+.about-section.about-expanded{display:grid!important;grid-template-columns:minmax(240px,340px) minmax(0,1fr);gap:clamp(28px,4vw,58px);align-items:start;padding:52px 6.4%;background:linear-gradient(135deg,#e7f1ff 0%,#f9fbff 60%,#eaf3ff 100%);scroll-margin-top:84px}
+.about-expanded .about-visual{position:relative;top:auto;width:100%;max-width:340px;padding:0 0 12px;margin:0 auto}
+.about-expanded .about-image-wrap{width:100%;height:auto;aspect-ratio:4/5;max-height:420px;background:#dbe5f2;border-radius:22px;overflow:hidden;box-shadow:0 18px 42px #0b2b5018}
+.about-expanded .about-image-wrap img{object-fit:cover;object-position:center 20%;width:100%;height:100%;display:block}
 .about-expanded .about-image-tag{bottom:16px;left:16px;right:16px;box-shadow:0 8px 28px #0a244422}
 .about-founder-caption{padding:18px 8px 0}
 .about-founder-caption>span{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#b77a0b}
@@ -333,5 +333,5 @@ body{background:#f5f7fb}
 .founder-footer{display:flex!important}
 .site-footer{display:flex!important}
 #services{scroll-margin-top:84px}
-@media(max-width:900px){.about-section.about-expanded{grid-template-columns:1fr;padding:48px 5%;gap:28px}.about-expanded .about-visual{position:relative;top:auto;max-width:520px;width:100%;margin:0 auto}.about-expanded .about-image-wrap{aspect-ratio:4/3;max-height:520px}.about-expanded .about-image-wrap img{object-fit:contain}.about-expanded .about-copy h2{font-size:36px}}
-@media(max-width:600px){.about-principles,.why-grid{grid-template-columns:1fr}.about-expanded .about-copy>p{font-size:13px}.about-expanded .about-copy>p.about-lead{font-size:14px}.contact-section{padding:35px 5%}.founder-footer{flex-wrap:wrap}.founder-footer>a{margin-left:0}}
+@media(max-width:900px){.about-section.about-expanded{grid-template-columns:minmax(0,280px) minmax(0,1fr);padding:42px 5%;gap:28px}.about-expanded .about-visual{position:relative;top:auto;max-width:280px;width:100%;margin:0 auto}.about-expanded .about-image-wrap{aspect-ratio:4/5;max-height:360px}.about-expanded .about-image-wrap img{object-fit:cover}.about-expanded .about-copy h2{font-size:36px}}
+@media(max-width:600px){.about-section.about-expanded{grid-template-columns:1fr;padding:34px 5%;gap:22px}.about-expanded .about-visual{max-width:250px}.about-expanded .about-image-wrap{max-height:315px}.about-principles,.why-grid{grid-template-columns:1fr}.about-expanded .about-copy>p{font-size:13px}.about-expanded .about-copy>p.about-lead{font-size:14px}.contact-section{padding:35px 5%}.founder-footer{flex-wrap:wrap}.founder-footer>a{margin-left:0}}
