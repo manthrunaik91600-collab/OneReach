@@ -6,11 +6,23 @@ function whatsappUrl(message) {
 function escapeHtml(s='') {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+const FALLBACK_SERVICES = [
+ {id:'ezzygo',title:'EzzyGo Bidding For All Your Needs On Your Budget',subtitle:'Bidding for all your needs on your budget',description:'Share your requirement and budget to explore suitable options through EzzyGo.',message:'Hi One Reach, I am interested in EzzyGo Bidding for my needs and budget.'},
+ {id:'loans',title:'Home Loan | Mortgage Loan | NRI Mortgage Loan | Loan Against Property',subtitle:'Home Loan • Mortgage Loan • NRI Mortgage Loan • Loan Against Property',description:'Enquire about home loans, mortgage loans, NRI mortgage loans and loan against property.',message:'Hi One Reach, I am interested in Home Loan / Mortgage Loan / NRI Mortgage Loan / Loan Against Property. Please contact me.'},
+ {id:'leads',title:'B2B & B2C Lead Generation Tool',subtitle:'B2B and B2C business leads',description:'Explore a business lead-generation tool for finding relevant business prospects and organizing leads.',message:'Hi One Reach, I am interested in the B2B & B2C Lead Generation Tool. Please share details.'},
+ {id:'kirana',title:'Whole Seller & Kiran Store & General Store',subtitle:'Sarukula Patti Tool',description:'A practical tool for wholesalers, kirana stores and general stores.',message:'Hi One Reach, I am interested in the Wholesale / Kirana Store / General Store Sarukula Patti Tool.'},
+ {id:'act-fibernet',title:'ACT Fibernet New Connections',subtitle:'New ACT Fibernet connections',description:'Request information about a new ACT Fibernet connection and available plans.',message:'Hi One Reach, I am interested in a new ACT Fibernet connection. Please contact me.'},
+ {id:'kotak',title:'Kotak Bank 811 Account',subtitle:'Zero-balance account enquiry',description:'Ask for current eligibility, account features and the official account-opening process.',message:'Hi One Reach, I am interested in a Kotak Bank 811 account. Please share details.'},
+ {id:'credit-cards',title:'Credit Cards',subtitle:'Credit card enquiry',description:'Enquire about credit-card options, eligibility criteria, fees and application requirements.',message:'Hi One Reach, I am interested in Credit Cards. Please contact me with available options.'},
+ {id:'bricks',title:'Red Clay Bricks',subtitle:'Red clay brick supply enquiries',description:'Share your project location and quantity requirement to enquire about red clay bricks.',message:'Hi One Reach, I am interested in Red Clay Bricks. Please share pricing and availability.'},
+ {id:'precast',title:'Pre Casting Walls',subtitle:'Pre-cast walls for plots and farming lands',description:'Enquire about pre-cast wall options for your plot, home, farm or commercial property.',message:'Hi One Reach, I am interested in Pre-Casting / Pre-Cast Compound Walls. Please contact me.'},
+ {id:'plots',title:'Plots Buying & Selling',subtitle:'Plot buying and selling enquiries',description:'Tell us whether you want to buy or sell a plot, your preferred location and budget.',message:'Hi One Reach, I am interested in buying or selling plots. Please contact me.'}
+];
 function renderServices(services) {
   const referenceImages = {
-    ezzygo:'/reference-assets/service-01.jpg', loans:'/reference-assets/service-02.jpg', leads:'/reference-assets/service-03.jpg',
-    kirana:'/reference-assets/service-04.jpg', 'act-fibernet':'/reference-assets/service-05.jpg', kotak:'/reference-assets/service-06.jpg',
-    'credit-cards':'/reference-assets/service-07.jpg', bricks:'/reference-assets/service-08.jpg', precast:'/reference-assets/service-09.jpg', plots:'/reference-assets/service-10.jpg'
+    ezzygo:'/service-01.jpg', loans:'/service-02.jpg', leads:'/service-03.jpg',
+    kirana:'/service-04.jpg', 'act-fibernet':'/service-05.jpg', kotak:'/service-06.jpg',
+    'credit-cards':'/service-07.jpg', bricks:'/service-08.jpg', precast:'/service-09.jpg', plots:'/service-10.jpg'
   };
   $('#serviceGrid').innerHTML = services.map((s,i)=>{
     const displayTitle = s.id === 'kotak' ? 'Kotak Bank 811 Account' : s.title;
@@ -106,7 +118,8 @@ async function init() {
     renderServices(d.services || []);
   } catch(e) {
     console.error('One Reach site load failed:', e);
-    $('#serviceGrid').innerHTML = '<p>Services are temporarily unavailable. Please refresh the page in a moment.</p>';
+    renderServices(FALLBACK_SERVICES);
+    $('#generalWhatsApp').href = whatsappUrl('Hi One Reach, I visited your website and would like to know more about your services.');
   }
 }
 init();
