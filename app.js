@@ -88,12 +88,24 @@ function renderWishTicker(){
  const all=[...lines,...lines];
  el.innerHTML=all.map(t=>`<span>${escapeHtml(t)}</span>`).join('');
 }
-function recordVisit(){
-  try {
-    let visitorId=localStorage.getItem('oneReachVisitorId');
-    if(!visitorId){visitorId='or_'+Array.from(crypto.getRandomValues(new Uint8Array(18))).map(n=>n.toString(16).padStart(2,'0')).join('');localStorage.setItem('oneReachVisitorId',visitorId);}
-    fetch('/api/analytics/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visitorId}),keepalive:true}).catch(()=>{});
-  } catch (_) { /* Analytics is optional when browser storage is disabled. */ }
+async function recordVisit(){
+  // Tracking must still work if a visitor's browser blocks localStorage.
+  let visitorId='';
+  try { visitorId=localStorage.getItem('oneReachVisitorId')||''; } catch (_) {}
+  if(!visitorId){
+    try { visitorId='or_'+Array.from(crypto.getRandomValues(new Uint8Array(18))).map(n=>n.toString(16).padStart(2,'0')).join(''); }
+    catch (_) { visitorId='or_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); }
+    try { localStorage.setItem('oneReachVisitorId',visitorId); } catch (_) {}
+  }
+  // Retry transient cold-start/network failures; never silently treat a failed POST as recorded.
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const response=await fetch('/api/analytics/visit',{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-store'},body:JSON.stringify({visitorId}),keepalive:true,cache:'no-store'});
+      if(response.ok){const result=await response.json();if(result && result.recorded)return;}
+      console.warn('One Reach visitor analytics request failed:',response.status);
+    }catch(err){console.warn('One Reach visitor analytics request failed:',err);}
+    if(attempt<2) await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
+  }
 }
 async function init() {
   recordVisit();

@@ -95,12 +95,20 @@ function indiaDayKey(date = new Date()) {
 function loadAnalytics() {
   try {
     const raw = JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf8'));
-    return raw && typeof raw === 'object' && raw.days && typeof raw.days === 'object' ? raw : {days:{}};
-  } catch { return {days:{}}; }
+    if (!raw || typeof raw !== 'object' || !raw.days || typeof raw.days !== 'object' || Array.isArray(raw.days)) {
+      throw new Error('Visitor analytics file has an invalid format');
+    }
+    return raw;
+  } catch (err) {
+    if (err.code === 'ENOENT') return {days:{}};
+    // Do not silently pretend that a damaged/unreadable file is empty: that can overwrite history.
+    throw err;
+  }
 }
 function saveAnalytics(data) {
-  const temp = ANALYTICS_FILE + '.tmp';
-  fs.writeFileSync(temp, JSON.stringify(data));
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const temp = ANALYTICS_FILE + '.' + process.pid + '.tmp';
+  fs.writeFileSync(temp, JSON.stringify(data), {encoding:'utf8', mode:0o600});
   fs.renameSync(temp, ANALYTICS_FILE);
 }
 
@@ -122,39 +130,55 @@ const upload = multer({storage, limits:{fileSize: 8 * 1024 * 1024}, fileFilter: 
   cb(null, true);
 }});
 
-app.get('/api/health', (_req, res) => res.json({ok:true, service:'One Reach'}));
-app.post('/api/analytics/visit', (req, res) => {
-  const visitorId = String((req.body || {}).visitorId || '').trim();
-  // Accept only a generated opaque ID; ignore malformed values.
-  if (!/^[a-zA-Z0-9_-]{16,100}$/.test(visitorId)) return res.status(400).json({error:'Invalid visitor ID'});
-  const day = indiaDayKey();
-  const analytics = loadAnalytics();
-  if (!analytics.days[day]) analytics.days[day] = {pageViews:0, uniqueVisitors:0, visitorHashes:[]};
-  const record = analytics.days[day];
-  if (!Array.isArray(record.visitorHashes)) record.visitorHashes = [];
-  record.pageViews = (Number(record.pageViews) || 0) + 1;
-  const crypto = require('crypto');
-  const hash = crypto.createHash('sha256').update(visitorId).digest('hex');
-  if (!record.visitorHashes.includes(hash)) {
-    record.visitorHashes.push(hash);
-    record.uniqueVisitors = record.visitorHashes.length;
-  } else {
-    record.uniqueVisitors = record.visitorHashes.length;
+app.get('/api/health', (_req, res) => {
+  try {
+    fs.mkdirSync(DATA_DIR, {recursive:true});
+    fs.accessSync(DATA_DIR, fs.constants.R_OK | fs.constants.W_OK);
+    res.set('Cache-Control','no-store');
+    res.json({ok:true, service:'One Reach', analyticsStorage:'writable', dataDir:DATA_DIR});
+  } catch (err) {
+    console.error('One Reach storage health check failed:', err);
+    res.status(500).json({ok:false, service:'One Reach', analyticsStorage:'unavailable'});
   }
-  saveAnalytics(analytics);
-  res.json({ok:true});
+});
+app.post('/api/analytics/visit', (req, res) => {
+  res.set('Cache-Control','no-store');
+  try {
+    const visitorId = String((req.body || {}).visitorId || '').trim();
+    if (!/^[a-zA-Z0-9_-]{16,100}$/.test(visitorId)) return res.status(400).json({ok:false,error:'Invalid visitor ID'});
+    const day = indiaDayKey();
+    const analytics = loadAnalytics();
+    if (!analytics.days[day]) analytics.days[day] = {pageViews:0, uniqueVisitors:0, visitorHashes:[]};
+    const record = analytics.days[day];
+    if (!Array.isArray(record.visitorHashes)) record.visitorHashes = [];
+    record.pageViews = Math.max(0, Number(record.pageViews) || 0) + 1;
+    const crypto = require('crypto');
+    const hash = crypto.createHash('sha256').update(visitorId).digest('hex');
+    if (!record.visitorHashes.includes(hash)) record.visitorHashes.push(hash);
+    record.uniqueVisitors = record.visitorHashes.length;
+    saveAnalytics(analytics);
+    res.status(200).json({ok:true, recorded:true, date:day});
+  } catch (err) {
+    console.error('Visitor analytics save failed:', err);
+    res.status(500).json({ok:false,error:'Visitor analytics could not be saved. Check Render storage configuration.'});
+  }
 });
 app.get('/api/admin/analytics', auth, (_req, res) => {
-  // Return the full persisted history. Do not cap at 366 days: admins need year-over-year reporting.
-  const analytics = loadAnalytics();
-  const days = Object.entries(analytics.days).map(([date, value]) => ({
-    date,
-    pageViews:Math.max(0, Number(value.pageViews)||0),
-    uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : Math.max(0, Number(value.uniqueVisitors)||0)
-  })).sort((a,b)=>b.date.localeCompare(a.date));
-  const totals = days.reduce((acc,d)=>({pageViews:acc.pageViews+d.pageViews, uniqueVisitorDays:acc.uniqueVisitorDays+d.uniqueVisitors}),{pageViews:0,uniqueVisitorDays:0});
-  res.set('Cache-Control','no-store');
-  res.json({ok:true, days, totals:{pageViews:totals.pageViews, uniqueVisitors:totals.uniqueVisitorDays, uniqueVisitorDays:totals.uniqueVisitorDays}});
+  try {
+    const analytics = loadAnalytics();
+    const days = Object.entries(analytics.days).map(([date, value]) => ({
+      date,
+      pageViews:Math.max(0, Number(value.pageViews)||0),
+      uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : Math.max(0, Number(value.uniqueVisitors)||0)
+    })).sort((a,b)=>b.date.localeCompare(a.date));
+    const totals = days.reduce((acc,d)=>({pageViews:acc.pageViews+d.pageViews, uniqueVisitorDays:acc.uniqueVisitorDays+d.uniqueVisitors}),{pageViews:0,uniqueVisitorDays:0});
+    res.set('Cache-Control','no-store');
+    res.json({ok:true, days, totals:{pageViews:totals.pageViews, uniqueVisitors:totals.uniqueVisitorDays, uniqueVisitorDays:totals.uniqueVisitorDays}});
+  } catch (err) {
+    console.error('Visitor analytics report failed:', err);
+    res.set('Cache-Control','no-store');
+    res.status(500).json({ok:false,error:'Visitor report could not be read. Check Render persistent disk and server logs.'});
+  }
 });
 app.get('/api/site', (_req, res) => {
   const data = loadData();
