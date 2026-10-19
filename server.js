@@ -145,13 +145,16 @@ app.post('/api/analytics/visit', (req, res) => {
   res.json({ok:true});
 });
 app.get('/api/admin/analytics', auth, (_req, res) => {
+  // Return the full persisted history. Do not cap at 366 days: admins need year-over-year reporting.
   const analytics = loadAnalytics();
   const days = Object.entries(analytics.days).map(([date, value]) => ({
     date,
-    pageViews:Number(value.pageViews)||0,
-    uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : (Number(value.uniqueVisitors)||0)
-  })).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,366);
-  res.json({ok:true, days, totals:days.reduce((acc,d)=>({pageViews:acc.pageViews+d.pageViews, uniqueVisitors:acc.uniqueVisitors+d.uniqueVisitors}),{pageViews:0,uniqueVisitors:0})});
+    pageViews:Math.max(0, Number(value.pageViews)||0),
+    uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : Math.max(0, Number(value.uniqueVisitors)||0)
+  })).sort((a,b)=>b.date.localeCompare(a.date));
+  const totals = days.reduce((acc,d)=>({pageViews:acc.pageViews+d.pageViews, uniqueVisitorDays:acc.uniqueVisitorDays+d.uniqueVisitors}),{pageViews:0,uniqueVisitorDays:0});
+  res.set('Cache-Control','no-store');
+  res.json({ok:true, days, totals:{pageViews:totals.pageViews, uniqueVisitors:totals.uniqueVisitorDays, uniqueVisitorDays:totals.uniqueVisitorDays}});
 });
 app.get('/api/site', (_req, res) => {
   const data = loadData();

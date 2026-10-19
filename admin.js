@@ -109,20 +109,57 @@ $('#siteForm').addEventListener('submit',async e=>{
 function setStatus(text,error=false){$('#saveStatus').textContent=text;$('#saveStatus').style.color=error?'#bd3030':'';}
 $('#logout').addEventListener('click',()=>{adminPassword='';siteData=null;$('#editorPanel').hidden=true;$('#loginPanel').hidden=false;$('#password').value='';});
 
+function indiaDateKey(date=new Date()){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+  const get=t=>parts.find(p=>p.type===t)?.value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+function shiftDateKey(key,days){const [y,m,d]=key.split('-').map(Number);const dt=new Date(Date.UTC(y,m-1,d+days));return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;}
+function monthStart(key){return `${key.slice(0,7)}-01`;}
+function addMonthsKey(key,delta){const [y,m]=key.split('-').map(Number);const dt=new Date(Date.UTC(y,m-1+delta,1));return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-01`;}
+function analyticsBounds(period,days){
+  const today=indiaDateKey(), dow=new Date(`${today}T00:00:00Z`).getUTCDay();
+  const mondayOffset=(dow+6)%7, monday=shiftDateKey(today,-mondayOffset), sunday=shiftDateKey(monday,6);
+  const thisMonth=monthStart(today), lastMonth=addMonthsKey(thisMonth,-1), nextMonth=addMonthsKey(thisMonth,1);
+  const year=today.slice(0,4), lastYear=String(Number(year)-1);
+  let start=today,end=today,label='Today';
+  switch(period){
+    case 'yesterday':start=end=shiftDateKey(today,-1);label='Yesterday';break;
+    case 'this-week':start=monday;end=sunday;label='This week';break;
+    case 'last-week':start=shiftDateKey(monday,-7);end=shiftDateKey(monday,-1);label='Last week';break;
+    case 'this-month':start=thisMonth;end=shiftDateKey(nextMonth, -1);label='This month';break;
+    case 'last-month':start=lastMonth;end=shiftDateKey(thisMonth,-1);label='Last month';break;
+    case 'this-year':start=`${year}-01-01`;end=`${year}-12-31`;label='This year';break;
+    case 'last-year':start=`${lastYear}-01-01`;end=`${lastYear}-12-31`;label='Last year';break;
+    case 'all-time':start=days.length?days.reduce((min,d)=>d.date<min?d.date:min,today):today;end=today;label='All time';break;
+  }
+  return {start,end,label};
+}
+let analyticsCache=[];
+function renderAnalytics(){
+  const period=$('#analyticsRange')?.value||'all-time';
+  const {start,end,label}=analyticsBounds(period,analyticsCache);
+  const rows=analyticsCache.filter(d=>d.date>=start&&d.date<=end).sort((a,b)=>b.date.localeCompare(a.date));
+  const sum=rows.reduce((a,d)=>({pageViews:a.pageViews+Number(d.pageViews||0),uniqueVisitors:a.uniqueVisitors+Number(d.uniqueVisitors||0)}),{pageViews:0,uniqueVisitors:0});
+  const today=indiaDateKey(),todayRow=analyticsCache.find(d=>d.date===today)||{pageViews:0,uniqueVisitors:0};
+  $('#totalPageViews').textContent=sum.pageViews.toLocaleString('en-IN');
+  $('#totalUniqueVisitors').textContent=sum.uniqueVisitors.toLocaleString('en-IN');
+  $('#todayPageViews').textContent=Number(todayRow.pageViews||0).toLocaleString('en-IN');
+  $('#todayUniqueVisitors').textContent=Number(todayRow.uniqueVisitors||0).toLocaleString('en-IN');
+  $('#rangePageViewsLabel').textContent=`Page views · ${label.toLowerCase()}`;
+  $('#analyticsRangeLabel').textContent=period==='all-time'?'All recorded dates':`${start} to ${end}`;
+  $('#analyticsRows').innerHTML=rows.length?rows.map(d=>`<tr><td>${esc(d.date)}</td><td>${Number(d.pageViews||0).toLocaleString('en-IN')}</td><td>${Number(d.uniqueVisitors||0).toLocaleString('en-IN')}</td></tr>`).join(''):'<tr><td colspan="3">No visits recorded for this period.</td></tr>';
+}
 async function loadAnalytics(){
   const status=$('#analyticsStatus');
   if(!status)return;
-  status.textContent='Loading daily visitor report…';
+  status.textContent='Loading visitor report…';
   try{
     const data=await api('/api/admin/analytics');
-    $('#totalPageViews').textContent=Number(data.totals?.pageViews||0).toLocaleString('en-IN');
-    $('#totalUniqueVisitors').textContent=Number(data.totals?.uniqueVisitors||0).toLocaleString('en-IN');
-    const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-    const todayRow=(data.days||[]).find(d=>d.date===today)||{pageViews:0,uniqueVisitors:0};
-    $('#todayPageViews').textContent=Number(todayRow.pageViews||0).toLocaleString('en-IN');
-    $('#todayUniqueVisitors').textContent=Number(todayRow.uniqueVisitors||0).toLocaleString('en-IN');
-    $('#analyticsRows').innerHTML=(data.days||[]).length?(data.days.map(d=>`<tr><td>${esc(d.date)}</td><td>${Number(d.pageViews||0).toLocaleString('en-IN')}</td><td>${Number(d.uniqueVisitors||0).toLocaleString('en-IN')}</td></tr>`).join('')):'<tr><td colspan="3">No visits recorded yet. Open the public website in a new tab to create the first record.</td></tr>';
-    status.textContent='Updated just now · Dates use India time.';
+    analyticsCache=Array.isArray(data.days)?data.days:[];
+    renderAnalytics();
+    status.textContent=`Updated just now · ${analyticsCache.length.toLocaleString('en-IN')} recorded dates · Data is shared across devices.`;
   }catch(err){status.textContent='Could not load report: '+err.message;}
 }
 $('#refreshAnalytics')?.addEventListener('click',loadAnalytics);
+$('#analyticsRange')?.addEventListener('change',renderAnalytics);
