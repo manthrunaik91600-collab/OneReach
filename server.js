@@ -232,10 +232,6 @@ app.put('/api/admin/site', auth, (req, res) => {
       });
     }
     if (services.length < 1) return res.status(400).json({error:'At least one service must remain on the website.'});
-    const requiredIds = defaults.services.map(s => s.id);
-    if (!requiredIds.every(id => services.some(s => s.id === id))) {
-      return res.status(400).json({error:'Keep at least one service on the website. You can add new services below them.'});
-    }
     current.services = services;
   }
   saveData(current);
