@@ -335,3 +335,8 @@ body{background:#f5f7fb}
 #services{scroll-margin-top:84px}
 @media(max-width:900px){.about-section.about-expanded{grid-template-columns:minmax(0,280px) minmax(0,1fr);padding:42px 5%;gap:28px}.about-expanded .about-visual{position:relative;top:auto;max-width:280px;width:100%;margin:0 auto}.about-expanded .about-image-wrap{aspect-ratio:4/5;max-height:360px}.about-expanded .about-image-wrap img{object-fit:cover}.about-expanded .about-copy h2{font-size:36px}}
 @media(max-width:600px){.about-section.about-expanded{grid-template-columns:1fr;padding:34px 5%;gap:22px}.about-expanded .about-visual{max-width:250px}.about-expanded .about-image-wrap{max-height:315px}.about-principles,.why-grid{grid-template-columns:1fr}.about-expanded .about-copy>p{font-size:13px}.about-expanded .about-copy>p.about-lead{font-size:14px}.contact-section{padding:35px 5%}.founder-footer{flex-wrap:wrap}.founder-footer>a{margin-left:0}}
+
+
+/* Renumber service badges sequentially after removing two cards. The photo assets contain old baked-in labels, so this opaque badge cleanly covers them. */
+.service-image .service-index{display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;width:140px!important;height:29px!important;top:7px!important;left:7px!important;padding:0!important;white-space:nowrap!important;overflow:hidden!important;background:#061d43!important;border:1px solid #ffffffc9!important;color:#fff!important;border-radius:13px!important;font:800 12px Manrope,sans-serif!important;letter-spacing:.2px!important;z-index:2!important}
+@media(max-width:700px){.service-image .service-index{width:108px!important;height:23px!important;top:5px!important;left:5px!important;font-size:9px!important}}
