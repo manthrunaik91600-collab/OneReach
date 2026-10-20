@@ -2,6 +2,10 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const { Pool } = require('pg');
+const analyticsDb = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, max: 3, connectionTimeoutMillis: 8000 }) : null;
+const analyticsDbReady = analyticsDb ? analyticsDb.query("CREATE TABLE IF NOT EXISTS daily_analytics (day date PRIMARY KEY, page_views integer NOT NULL DEFAULT 0, visitor_hashes jsonb NOT NULL DEFAULT '[]'::jsonb)") : Promise.resolve();
+if (analyticsDb) analyticsDb.on('error', err => console.error('Analytics database pool error:', err.message));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -141,43 +145,58 @@ app.get('/api/health', (_req, res) => {
     res.status(500).json({ok:false, service:'One Reach', analyticsStorage:'unavailable'});
   }
 });
-app.post('/api/analytics/visit', (req, res) => {
+app.post('/api/analytics/visit', async (req, res) => {
   res.set('Cache-Control','no-store');
   try {
     const visitorId = String((req.body || {}).visitorId || '').trim();
     if (!/^[a-zA-Z0-9_-]{16,100}$/.test(visitorId)) return res.status(400).json({ok:false,error:'Invalid visitor ID'});
     const day = indiaDayKey();
-    const analytics = loadAnalytics();
-    if (!analytics.days[day]) analytics.days[day] = {pageViews:0, uniqueVisitors:0, visitorHashes:[]};
-    const record = analytics.days[day];
-    if (!Array.isArray(record.visitorHashes)) record.visitorHashes = [];
-    record.pageViews = Math.max(0, Number(record.pageViews) || 0) + 1;
     const crypto = require('crypto');
     const hash = crypto.createHash('sha256').update(visitorId).digest('hex');
-    if (!record.visitorHashes.includes(hash)) record.visitorHashes.push(hash);
-    record.uniqueVisitors = record.visitorHashes.length;
-    saveAnalytics(analytics);
-    res.status(200).json({ok:true, recorded:true, date:day});
+    if (analyticsDb) {
+      await analyticsDbReady;
+      await analyticsDb.query(
+        "INSERT INTO daily_analytics (day, page_views, visitor_hashes) VALUES ($1::date, 1, jsonb_build_array($2::text)) ON CONFLICT (day) DO UPDATE SET page_views = daily_analytics.page_views + 1, visitor_hashes = CASE WHEN daily_analytics.visitor_hashes @> jsonb_build_array($2::text) THEN daily_analytics.visitor_hashes ELSE daily_analytics.visitor_hashes || jsonb_build_array($2::text) END",
+        [day, hash]
+      );
+    } else {
+      const analytics = loadAnalytics();
+      if (!analytics.days[day]) analytics.days[day] = {pageViews:0, uniqueVisitors:0, visitorHashes:[]};
+      const record = analytics.days[day];
+      if (!Array.isArray(record.visitorHashes)) record.visitorHashes = [];
+      record.pageViews = Math.max(0, Number(record.pageViews) || 0) + 1;
+      if (!record.visitorHashes.includes(hash)) record.visitorHashes.push(hash);
+      record.uniqueVisitors = record.visitorHashes.length;
+      saveAnalytics(analytics);
+    }
+    res.status(200).json({ok:true, recorded:true, date:day, storage:analyticsDb ? 'postgres' : 'file'});
   } catch (err) {
     console.error('Visitor analytics save failed:', err);
-    res.status(500).json({ok:false,error:'Visitor analytics could not be saved. Check Render storage configuration.'});
+    res.status(500).json({ok:false,error:'Visitor analytics could not be saved. Check DATABASE_URL and database logs.'});
   }
 });
-app.get('/api/admin/analytics', auth, (_req, res) => {
+app.get('/api/admin/analytics', auth, async (_req, res) => {
   try {
-    const analytics = loadAnalytics();
-    const days = Object.entries(analytics.days).map(([date, value]) => ({
-      date,
-      pageViews:Math.max(0, Number(value.pageViews)||0),
-      uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : Math.max(0, Number(value.uniqueVisitors)||0)
-    })).sort((a,b)=>b.date.localeCompare(a.date));
+    let days;
+    if (analyticsDb) {
+      await analyticsDbReady;
+      const result = await analyticsDb.query("SELECT to_char(day, 'YYYY-MM-DD') AS date, page_views AS \"pageViews\", jsonb_array_length(visitor_hashes) AS \"uniqueVisitors\" FROM daily_analytics ORDER BY day DESC");
+      days = result.rows.map(row => ({date:row.date,pageViews:Math.max(0,Number(row.pageViews)||0),uniqueVisitors:Math.max(0,Number(row.uniqueVisitors)||0)}));
+    } else {
+      const analytics = loadAnalytics();
+      days = Object.entries(analytics.days).map(([date, value]) => ({
+        date,
+        pageViews:Math.max(0, Number(value.pageViews)||0),
+        uniqueVisitors:Array.isArray(value.visitorHashes) ? value.visitorHashes.length : Math.max(0, Number(value.uniqueVisitors)||0)
+      })).sort((a,b)=>b.date.localeCompare(a.date));
+    }
     const totals = days.reduce((acc,d)=>({pageViews:acc.pageViews+d.pageViews, uniqueVisitorDays:acc.uniqueVisitorDays+d.uniqueVisitors}),{pageViews:0,uniqueVisitorDays:0});
     res.set('Cache-Control','no-store');
-    res.json({ok:true, days, totals:{pageViews:totals.pageViews, uniqueVisitors:totals.uniqueVisitorDays, uniqueVisitorDays:totals.uniqueVisitorDays}});
+    res.json({ok:true, storage:analyticsDb ? 'postgres' : 'file', days, totals:{pageViews:totals.pageViews, uniqueVisitors:totals.uniqueVisitorDays, uniqueVisitorDays:totals.uniqueVisitorDays}});
   } catch (err) {
     console.error('Visitor analytics report failed:', err);
     res.set('Cache-Control','no-store');
-    res.status(500).json({ok:false,error:'Visitor report could not be read. Check Render persistent disk and server logs.'});
+    res.status(500).json({ok:false,error:'Visitor report could not be read. Check DATABASE_URL and database logs.'});
   }
 });
 app.get('/api/site', (_req, res) => {
@@ -232,4 +251,9 @@ app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')
 app.use((err, _req, res, _next) => {
   res.status(400).json({error: err.message || 'Request failed.'});
 });
-app.listen(PORT, () => console.log(`One Reach running on ${PORT}`));
+analyticsDbReady.then(() => {
+  app.listen(PORT, () => console.log(`One Reach running on ${PORT}; analytics storage: ${analyticsDb ? 'PostgreSQL' : 'local file'}`));
+}).catch(err => {
+  console.error('Analytics database initialization failed:', err);
+  process.exit(1);
+});
