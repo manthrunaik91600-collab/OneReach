@@ -251,7 +251,37 @@ app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')
 app.use((err, _req, res, _next) => {
   res.status(400).json({error: err.message || 'Request failed.'});
 });
-analyticsDbReady.then(() => {
+async function verifyAnalyticsDatabaseWrite() {
+  if (!analyticsDb) return;
+  await analyticsDbReady;
+  const client = await analyticsDb.connect();
+  let inTransaction = false;
+  try {
+    await client.query('BEGIN');
+    inTransaction = true;
+    const testDay = '2000-01-01';
+    const testHash = require('crypto').randomBytes(32).toString('hex');
+    await client.query(
+      "INSERT INTO daily_analytics (day, page_views, visitor_hashes) VALUES ($1::date, 1, jsonb_build_array($2::text)) ON CONFLICT (day) DO UPDATE SET page_views = daily_analytics.page_views + 1, visitor_hashes = CASE WHEN daily_analytics.visitor_hashes @> jsonb_build_array($2::text) THEN daily_analytics.visitor_hashes ELSE daily_analytics.visitor_hashes || jsonb_build_array($2::text) END",
+      [testDay, testHash]
+    );
+    const check = await client.query(
+      "SELECT 1 FROM daily_analytics WHERE day = $1::date AND visitor_hashes @> jsonb_build_array($2::text)",
+      [testDay, testHash]
+    );
+    if (check.rowCount !== 1) throw new Error('Analytics write/read self-test returned no matching row');
+    await client.query('ROLLBACK');
+    inTransaction = false;
+    console.log('Analytics database write/read self-test passed; test transaction rolled back.');
+  } catch (err) {
+    if (inTransaction) await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+verifyAnalyticsDatabaseWrite().then(() => {
   app.listen(PORT, () => console.log(`One Reach running on ${PORT}; analytics storage: ${analyticsDb ? 'PostgreSQL' : 'local file'}`));
 }).catch(err => {
   console.error('Analytics database initialization failed:', err);
