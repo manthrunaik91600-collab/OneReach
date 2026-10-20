@@ -36,8 +36,6 @@ const defaults = {
   services: [
     {id:'ezzygo', title:'EzzyGo Bidding For All Your Needs On Your Budget', subtitle:'Bidding for all your needs on your budget', description:'Share your requirement and budget to explore suitable options through EzzyGo.', image:'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in EzzyGo Bidding for my needs and budget.'},
     {id:'loans', title:'Home Loan | Mortgage Loan | NRI Mortgage Loan | Loan Against Property', subtitle:'Home Loan • Mortgage Loan • NRI Mortgage Loan • Loan Against Property', description:'Enquire about home loans, mortgage loans, NRI mortgage loans and loan against property.', image:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in Home Loan / Mortgage Loan / NRI Mortgage Loan / Loan Against Property. Please contact me.'},
-    {id:'leads', title:'B2B & B2C Lead Generation Tool', subtitle:'B2B and B2C business leads', description:'Explore a business lead-generation tool for finding relevant business prospects and organizing leads.', image:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in the B2B & B2C Lead Generation Tool. Please share details.'},
-    {id:'kirana', title:'Whole Seller & Kiran Store & General Store', subtitle:'Sarukula Patti Tool', description:'A practical tool concept for wholesalers, kirana stores and general stores to manage product lists and requirements.', image:'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in the Wholesale / Kirana Store / General Store Sarukula Patti Tool.'},
     {id:'act-fibernet', title:'ACT Fibernet New Connections', subtitle:'New ACT Fibernet connections', description:'Request information about a new ACT Fibernet connection and available plans in your area.', image:'https://static.toiimg.com/thumb/msid-125814947,width-1280,height-720,resizemode-4/125814947.jpg', message:'Hi One Reach, I am interested in a new ACT Fibernet connection. Please contact me.'},
     {id:'kotak', title:'Kotak Bank 0 Balance Account', subtitle:'Zero-balance account enquiry', description:'Ask for current eligibility, account features and the official account-opening process.', image:'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/09/f9/7f/09f97f48-d7a9-2435-8a5a-6ebd36a600df/AppIcon-1x_U007emarketing-0-7-0-85-220-0.png/1200x630wa.png', message:'Hi One Reach, I am interested in a Kotak Bank zero-balance account. Please share details.'},
     {id:'credit-cards', title:'Credit Cards', subtitle:'Credit card enquiry', description:'Enquire about credit-card options, eligibility criteria, fees and application requirements.', image:'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=85', message:'Hi One Reach, I am interested in Credit Cards. Please contact me with available options.'},
@@ -66,7 +64,7 @@ function loadData() {
         if (def.id === 'precast' && (!prior.message || prior.message.includes('Pre-Casting / Pre-Cast Compound Walls'))) item.message = def.message;
         return item;
       });
-      const known = new Set(defaults.services.map(x => x.id));
+      const known = new Set([...defaults.services.map(x => x.id), 'leads', 'kirana']);
       const extras = saved.services.filter(x => x && x.id && !known.has(String(x.id))).map(x => ({
         id:String(x.id).slice(0,80),
         title:String(x.title || 'New service').slice(0,120),
@@ -214,7 +212,7 @@ app.put('/api/admin/site', auth, (req, res) => {
   for (const key of ['brand','tagline','aboutTitle','aboutText','ownerName','ownerPhoto','contactNote']) {
     if (typeof incoming[key] === 'string') current[key] = incoming[key].slice(0, 5000);
   }
-  if (Array.isArray(incoming.services) && incoming.services.length >= 10 && incoming.services.length <= 100) {
+  if (Array.isArray(incoming.services) && incoming.services.length >= 8 && incoming.services.length <= 100) {
     const seen = new Set();
     const services = [];
     for (const s of incoming.services) {
@@ -233,10 +231,10 @@ app.put('/api/admin/site', auth, (req, res) => {
         message:String(s.message || '').slice(0,1200)
       });
     }
-    if (services.length < 10) return res.status(400).json({error:'The original 10 services must remain on the website.'});
+    if (services.length < 8) return res.status(400).json({error:'At least 8 services must remain on the website.'});
     const requiredIds = defaults.services.map(s => s.id);
     if (!requiredIds.every(id => services.some(s => s.id === id))) {
-      return res.status(400).json({error:'Please keep all original 10 services. You can add new services below them.'});
+      return res.status(400).json({error:'Please keep all 8 current services. You can add new services below them.'});
     }
     current.services = services;
   }
