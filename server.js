@@ -212,7 +212,7 @@ app.put('/api/admin/site', auth, (req, res) => {
   for (const key of ['brand','tagline','aboutTitle','aboutText','ownerName','ownerPhoto','contactNote']) {
     if (typeof incoming[key] === 'string') current[key] = incoming[key].slice(0, 5000);
   }
-  if (Array.isArray(incoming.services) && incoming.services.length >= 8 && incoming.services.length <= 100) {
+  if (Array.isArray(incoming.services) && incoming.services.length >= 1 && incoming.services.length <= 100) {
     const seen = new Set();
     const services = [];
     for (const s of incoming.services) {
@@ -231,10 +231,10 @@ app.put('/api/admin/site', auth, (req, res) => {
         message:String(s.message || '').slice(0,1200)
       });
     }
-    if (services.length < 8) return res.status(400).json({error:'At least 8 services must remain on the website.'});
+    if (services.length < 1) return res.status(400).json({error:'At least one service must remain on the website.'});
     const requiredIds = defaults.services.map(s => s.id);
     if (!requiredIds.every(id => services.some(s => s.id === id))) {
-      return res.status(400).json({error:'Please keep all 8 current services. You can add new services below them.'});
+      return res.status(400).json({error:'Keep at least one service on the website. You can add new services below them.'});
     }
     current.services = services;
   }
