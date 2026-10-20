@@ -87,7 +87,7 @@ $('#addService').addEventListener('click',()=>{
 $('#serviceEditors').addEventListener('click',e=>{
   const move=e.target.closest('[data-move]');
   if(move){
-    const cards=Array.from($('.service-editor'));
+    const cards=$('.service-editor');
     const index=cards.findIndex(card=>card.dataset.id===move.dataset.id);
     const target=index+(move.dataset.move==='up'?-1:1);
     if(index<0||target<0||target>=cards.length)return;
