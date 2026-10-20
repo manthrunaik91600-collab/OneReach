@@ -34,7 +34,7 @@ function renderServiceEditors(){
   $('#serviceEditors').innerHTML=list.map((s,i)=>`
     <div class="service-editor" data-index="${i}" data-id="${esc(s.id)}">
       <div class="service-editor-head"><span class="num">${String(i+1).padStart(2,'0')}</span><strong>${esc(s.title||'New service')}</strong>
-      ${i>=10?'<button type="button" class="remove-service secondary" data-remove="'+esc(s.id)+'">Remove added service</button>':''}</div>
+      <div class="service-order"><button type="button" class="secondary" data-move="up" data-id="${esc(s.id)}" ${i===0?'disabled':''} aria-label="Move service up">↑</button><button type="button" class="secondary" data-move="down" data-id="${esc(s.id)}" ${i===list.length-1?'disabled':''} aria-label="Move service down">↓</button><button type="button" class="remove-service secondary" data-remove="${esc(s.id)}">Delete service</button></div></div>
       <div class="fields two"><label>Service title<input data-key="title" value="${esc(s.title)}" maxlength="120" required></label><label>Short subtitle<input data-key="subtitle" value="${esc(s.subtitle)}" maxlength="180"></label></div>
       <label>Description<textarea data-key="description" rows="3" maxlength="1200">${esc(s.description)}</textarea></label>
       <label>WhatsApp prefilled enquiry message<textarea data-key="message" rows="3" maxlength="1200">${esc(s.message)}</textarea><small class="field-hint">This exact message opens in your WhatsApp when a visitor clicks this service.</small></label>
@@ -85,13 +85,27 @@ $('#addService').addEventListener('click',()=>{
   last?.querySelector('[data-key=title]')?.focus();
 });
 $('#serviceEditors').addEventListener('click',e=>{
+  const move=e.target.closest('[data-move]');
+  if(move){
+    const cards=Array.from($('.service-editor'));
+    const index=cards.findIndex(card=>card.dataset.id===move.dataset.id);
+    const target=index+(move.dataset.move==='up'?-1:1);
+    if(index<0||target<0||target>=cards.length)return;
+    const ordered=cards.map(card=>siteData.services.find(s=>s.id===card.dataset.id)).filter(Boolean);
+    [ordered[index],ordered[target]]=[ordered[target],ordered[index]];
+    siteData.services=ordered;
+    renderServiceEditors();
+    setStatus('Service position changed. Click Save all changes to publish.');
+    return;
+  }
   const btn=e.target.closest('[data-remove]');
   if(!btn)return;
   const id=btn.dataset.remove;
-  if(!confirm('Remove this added service from the website? This will apply after saving.'))return;
+  if(siteData.services.length<=8){setStatus('At least 8 services must remain.',true);return;}
+  if(!confirm('Delete this service from the website? This will apply after clicking Save all changes.'))return;
   siteData.services=siteData.services.filter(s=>s.id!==id);
   renderServiceEditors();
-  setStatus('Added service removed from editor. Click Save all changes to publish.');
+  setStatus('Service deleted from editor. Click Save all changes to publish.');
 });
 $('#siteForm').addEventListener('submit',async e=>{
   e.preventDefault();const button=e.submitter;button.disabled=true;setStatus('Saving…');
