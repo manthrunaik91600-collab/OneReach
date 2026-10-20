@@ -101,7 +101,7 @@ $('#serviceEditors').addEventListener('click',e=>{
   const btn=e.target.closest('[data-remove]');
   if(!btn)return;
   const id=btn.dataset.remove;
-  if(siteData.services.length<=8){setStatus('At least 8 services must remain.',true);return;}
+  if(siteData.services.length<=1){setStatus('At least one service must remain.',true);return;}
   if(!confirm('Delete this service from the website? This will apply after clicking Save all changes.'))return;
   siteData.services=siteData.services.filter(s=>s.id!==id);
   renderServiceEditors();
