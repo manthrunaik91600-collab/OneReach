@@ -14,13 +14,19 @@ const FALLBACK_SERVICES = [
  {id:'credit-cards',title:'Credit Cards',subtitle:'Credit card enquiry',description:'Enquire about credit-card options, eligibility criteria, fees and application requirements.',message:'Hi One Reach, I am interested in Credit Cards. Please contact me with available options.'},
  {id:'bricks',title:'Red Clay Bricks',subtitle:'Red clay brick supply enquiries',description:'Share your project location and quantity requirement to enquire about red clay bricks.',message:'Hi One Reach, I am interested in Red Clay Bricks. Please share pricing and availability.'},
  {id:'precast',title:'Pre Casting Walls',subtitle:'Pre-cast walls for plots and farming lands',description:'Enquire about pre-cast wall options for your plot, home, farm or commercial property.',message:'Hi One Reach, I am interested in Pre-Casting / Pre-Cast Compound Walls. Please contact me.'},
- {id:'plots',title:'Plots Buying & Selling',subtitle:'Plot buying and selling enquiries',description:'Tell us whether you want to buy or sell a plot, your preferred location and budget.',message:'Hi One Reach, I am interested in buying or selling plots. Please contact me.'}
+ {id:'plots',title:'Plots Buying & Selling',subtitle:'Plot buying and selling enquiries',description:'Tell us whether you want to buy or sell a plot, your preferred location and budget.',message:'Hi One Reach, I am interested in buying or selling plots. Please contact me.'},
+ {id:'flats-buy-sell',title:'Flats Buying & Selling',subtitle:'Buy or sell residential flats',description:'Enquire about buying or selling a flat. Share your preferred location, budget or property details to get started.',image:'https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I am interested in buying or selling a flat. Please contact me.'},
+ {id:'tata-aia-life-insurance',title:'Tata AIA Life Insurance',subtitle:'Life insurance plan enquiries',description:'Request information about Tata AIA Life Insurance plans, features and eligibility, and confirm policy details directly with the insurer or an authorised representative. Terms and eligibility apply.',image:'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I would like information about Tata AIA Life Insurance plans. Please connect me with the appropriate authorised representative.'},
+ {id:'villas-buy-sell',title:'Villas Buying & Selling',subtitle:'Buy or sell residential villas',description:'Enquire about buying or selling a villa. Share your preferred location, budget or property details to get started.',image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I am interested in buying or selling a villa. Please contact me.'}
 ];
 function renderServices(services) {
   const referenceImages = {
     ezzygo:'/service-01.jpg', loans:'/service-02.jpg', leads:'/service-03.jpg',
     kirana:'/service-04.jpg', 'act-fibernet':'/service-05.jpg', kotak:'/service-06.jpg',
-    'credit-cards':'/service-07.jpg', bricks:'/service-08.jpg', precast:'/service-09.jpg', plots:'/service-10.jpg'
+    'credit-cards':'/service-07.jpg', bricks:'/service-08.jpg', precast:'/service-09.jpg', plots:'/service-10.jpg',
+    'flats-buy-sell':'https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1000&q=85',
+    'tata-aia-life-insurance':'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1000&q=85',
+    'villas-buy-sell':'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85'
   };
   $('#serviceGrid').innerHTML = services.map((s,i)=>{
     const displayTitle = s.id === 'kotak' ? 'Kotak Bank 811 Account' : s.title;
