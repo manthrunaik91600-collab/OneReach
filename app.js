@@ -20,7 +20,7 @@ const FALLBACK_SERVICES = [
  {id:'villas-buy-sell',title:'Villas Buying & Selling',subtitle:'Buy or sell residential villas',description:'Enquire about buying or selling a villa. Share your preferred location, budget or property details to get started.',image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I am interested in buying or selling a villa. Please contact me.'},
  {id:'gold-loan',title:'Gold Loan',subtitle:'Gold loan enquiry',description:'Enquire about gold loan options, eligible loan amounts, interest rates, fees and repayment terms. Final eligibility and terms depend on the lender.',image:'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I am interested in a Gold Loan. Please share available options, eligibility and terms.'},
  {id:'transport-service',title:'Transport Service',subtitle:'Transport and goods movement enquiries',description:'Share your pickup and delivery locations, goods type and approximate load to enquire about suitable transport options and pricing.',image:'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I am interested in Transport Services. Please contact me to discuss my pickup, delivery and load requirements.'},
- {id:'vyapar-software',title:'Vyapar Billing & Accounting Software',subtitle:'GST billing, invoicing, inventory and business reports',description:'Simplify business operations with billing, GST invoices, stock management, expense tracking and business reports. Enquire about available plans and a demo.',image:'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I am interested in Vyapar Billing & Accounting Software. Please share available plans, pricing, features and demo details.'}
+ {id:'vyapar-software',title:'Vyapar Billing & Accounting Software',subtitle:'GST billing, invoicing, inventory and business reports',description:'Simplify business operations with billing, GST invoices, stock management, expense tracking and business reports. Enquire about available plans and a demo.',image:'https://vyaparwebsiteimages.vypcdn.in/marketing-images/images/invoice-generator-content-revamp/ig-hero-v2.webp',message:'Hi One Reach, I am interested in Vyapar Billing & Accounting Software. Please share available plans, pricing, features and demo details.'}
 ];
 function englishEnquiryMessage(service) {
   const messages = {
@@ -51,7 +51,7 @@ function renderServices(services) {
     'villas-buy-sell':'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85',
     'gold-loan':'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=1000&q=85',
     'transport-service':'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=1000&q=85',
-    'vyapar-software':'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=85'
+    'vyapar-software':'https://vyaparwebsiteimages.vypcdn.in/marketing-images/images/invoice-generator-content-revamp/ig-hero-v2.webp'
   };
   $('#serviceGrid').innerHTML = services.map((s,i)=>{
     const displayTitle = s.id === 'kotak' ? 'Kotak Bank 811 Account' : s.title;
