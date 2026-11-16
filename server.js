@@ -17,7 +17,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const WA_NUMBER = (process.env.WHATSAPP_NUMBER || '919160086793').replace(/\D/g, '');
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '2mb', verify: (req, _res, buf) => { if (req.originalUrl.startsWith('/webhooks/whatsapp')) req.rawBody = Buffer.from(buf); } }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use(express.static(__dirname, { index: 'index.html', dotfiles: 'ignore', setHeaders: (res, filePath) => {
@@ -249,6 +249,55 @@ app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => {
 });
 
 /* One Reach CRM: persistent lead and employee records */
+
+/* Official Meta WhatsApp Cloud API webhook. Complete Coexistence onboarding in Meta first. */
+const WA_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || '';
+const WA_APP_SECRET = process.env.META_APP_SECRET || '';
+function saveWhatsappEvent(event) {
+  const crm=loadCrm();
+  crm.messages=Array.isArray(crm.messages)?crm.messages:[];
+  if(event.messageId && crm.messages.some(x=>x.messageId===event.messageId)) return;
+  const digits=String(event.from||'').replace(/\\D/g,'');
+  const lead=crm.leads.find(x=>{const p=String(x.phone||'').replace(/\\D/g,'');return p && (p.endsWith(digits)||digits.endsWith(p));});
+  const record={id:require('crypto').randomUUID(),messageId:event.messageId||'',from:event.from||'',contactName:event.contactName||'',text:event.text||'',messageType:event.messageType||'unknown',timestamp:event.timestamp||new Date().toISOString(),direction:'inbound',leadId:lead?lead.id:null,status:'received'};
+  crm.messages.unshift(record);
+  if(lead){lead.lastWhatsappMessageAt=record.timestamp;lead.updatedAt=new Date().toISOString();lead.activities=Array.isArray(lead.activities)?lead.activities:[];lead.activities.unshift({at:new Date().toISOString(),action:'WhatsApp message received',details:(record.text||'Incoming '+record.messageType).slice(0,500)});}
+  saveCrm(crm);
+}
+app.get('/webhooks/whatsapp',(req,res)=>{
+  const mode=req.query['hub.mode'], token=req.query['hub.verify_token'], challenge=req.query['hub.challenge'];
+  if(mode==='subscribe' && WA_VERIFY_TOKEN && token===WA_VERIFY_TOKEN) return res.status(200).type('text/plain').send(String(challenge||''));
+  return res.sendStatus(403);
+});
+app.post('/webhooks/whatsapp',(req,res)=>{
+  try{
+    if(!WA_APP_SECRET) return res.sendStatus(503);
+    const signature=req.get('x-hub-signature-256')||'';
+    const expected='sha256='+require('crypto').createHmac('sha256',WA_APP_SECRET).update(req.rawBody||Buffer.alloc(0)).digest('hex');
+    const a=Buffer.from(signature),b=Buffer.from(expected);
+    if(a.length!==b.length||!require('crypto').timingSafeEqual(a,b)) return res.sendStatus(401);
+    const body=req.body||{};
+    if(body.object!=='whatsapp_business_account') return res.sendStatus(404);
+    for(const entry of (body.entry||[])) for(const change of (entry.changes||[])){
+      const value=change.value||{},contacts=value.contacts||[];
+      for(const msg of (value.messages||[])){
+        const contact=contacts.find(c=>c.wa_id===msg.from)||{};
+        let text='';
+        if(msg.text?.body) text=msg.text.body;
+        else if(msg.button?.text) text=msg.button.text;
+        else if(msg.interactive?.button_reply?.title) text=msg.interactive.button_reply.title;
+        else if(msg.interactive?.list_reply?.title) text=msg.interactive.list_reply.title;
+        saveWhatsappEvent({messageId:msg.id,from:msg.from,contactName:contact.profile?.name||'',text,messageType:msg.type,timestamp:msg.timestamp?new Date(Number(msg.timestamp)*1000).toISOString():new Date().toISOString()});
+      }
+    }
+    return res.sendStatus(200);
+  }catch(err){console.error('WhatsApp webhook failed:',err);return res.sendStatus(500);}
+});
+app.get('/api/admin/crm/whatsapp/messages',auth,(req,res)=>{
+  try{const crm=loadCrm();res.set('Cache-Control','no-store');res.json({ok:true,messages:crm.messages||[]});}
+  catch(err){console.error('WhatsApp inbox read failed:',err);res.status(500).json({error:'WhatsApp inbox unavailable.'});}
+});
+
 const CRM_FILE = path.join(DATA_DIR, 'crm-data.json');
 function loadCrm() {
   try {
