@@ -247,6 +247,79 @@ app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({error:'Choose an image first.'});
   res.json({ok:true, url:'/uploads/' + req.file.filename});
 });
+
+/* One Reach CRM: persistent lead and employee records */
+const CRM_FILE = path.join(DATA_DIR, 'crm-data.json');
+function loadCrm() {
+  try {
+    const value = JSON.parse(fs.readFileSync(CRM_FILE, 'utf8'));
+    return { leads:Array.isArray(value.leads)?value.leads:[], employees:Array.isArray(value.employees)?value.employees:[] };
+  } catch (err) {
+    if (err.code === 'ENOENT') return {leads:[],employees:[]};
+    throw err;
+  }
+}
+function saveCrm(value) {
+  fs.mkdirSync(DATA_DIR,{recursive:true});
+  const temp=CRM_FILE+'.'+process.pid+'.tmp';
+  fs.writeFileSync(temp,JSON.stringify(value,null,2),{encoding:'utf8',mode:0o600});
+  fs.renameSync(temp,CRM_FILE);
+}
+const crmText=(v,max=500)=>String(v==null?'':v).trim().slice(0,max);
+app.get('/api/admin/crm',auth,(req,res)=>{
+  try { res.set('Cache-Control','no-store'); res.json({ok:true,...loadCrm()}); }
+  catch(err){ console.error('CRM read failed:',err); res.status(500).json({error:'CRM data could not be read.'}); }
+});
+app.post('/api/admin/crm/leads',auth,(req,res)=>{
+  try {
+    const body=req.body||{}, name=crmText(body.name,120), phone=crmText(body.phone,30).replace(/[^+0-9]/g,'');
+    if(!name||!phone) return res.status(400).json({error:'Customer name and mobile number are required.'});
+    const crm=loadCrm();
+    const duplicate=crm.leads.find(x=>x.phone.replace(/\D/g,'')===phone.replace(/\D/g,''));
+    if(duplicate) return res.status(409).json({error:'This mobile number already exists in CRM. Open the existing lead instead.'});
+    const now=new Date().toISOString();
+    const lead={id:require('crypto').randomUUID(),name,phone,service:crmText(body.service,160),area:crmText(body.area,160),requirement:crmText(body.requirement,1500),source:['WhatsApp','Manual'].includes(body.source)?body.source:'Manual',sourceDetail:crmText(body.sourceDetail,300),status:'New',qualified:false,assignedTo:'',assignedDate:'',firstFollowUpDate:'',nextFollowUpDate:'',expectedCloseDate:'',notes:crmText(body.notes,3000),activities:[{at:now,action:'Lead created',details:'Enquiry added to CRM'}],createdAt:now,updatedAt:now};
+    crm.leads.unshift(lead); saveCrm(crm); res.status(201).json({ok:true,lead});
+  } catch(err){ console.error('CRM lead create failed:',err); res.status(500).json({error:'Lead could not be saved.'}); }
+});
+app.put('/api/admin/crm/leads/:id',auth,(req,res)=>{
+  try {
+    const crm=loadCrm(), lead=crm.leads.find(x=>x.id===req.params.id);
+    if(!lead) return res.status(404).json({error:'Lead not found.'});
+    const b=req.body||{}, before={status:lead.status,assignedTo:lead.assignedTo,nextFollowUpDate:lead.nextFollowUpDate};
+    for(const [key,max] of Object.entries({name:120,phone:30,service:160,area:160,requirement:1500,sourceDetail:300,assignedTo:120,assignedDate:20,firstFollowUpDate:20,nextFollowUpDate:20,expectedCloseDate:20,notes:3000})) {
+      if(b[key]!==undefined) lead[key]=crmText(b[key],max);
+    }
+    if(b.source!==undefined && ['WhatsApp','Manual'].includes(b.source)) lead.source=b.source;
+    if(b.status!==undefined && ['New','Contacted','Qualified','Assigned','Follow-up Required','Converted','Not Interested','Lost'].includes(b.status)) lead.status=b.status;
+    if(b.qualified!==undefined) lead.qualified=!!b.qualified;
+    if(lead.status==='Assigned' && !lead.assignedTo) return res.status(400).json({error:'Select an employee before assigning this lead.'});
+    if(lead.status==='Assigned' && !lead.qualified) return res.status(400).json({error:'Qualify the customer before assigning this lead.'});
+    const changes=[];
+    for(const key of Object.keys(before)) if(before[key]!==lead[key]) changes.push(key+' changed from '+(before[key]||'—')+' to '+(lead[key]||'—'));
+    if(b.activity) changes.push(crmText(b.activity,1000));
+    if(changes.length) lead.activities.unshift({at:new Date().toISOString(),action:'Lead updated',details:changes.join('; ')});
+    lead.updatedAt=new Date().toISOString(); saveCrm(crm); res.json({ok:true,lead});
+  } catch(err){ console.error('CRM lead update failed:',err); res.status(500).json({error:'Lead update failed.'}); }
+});
+app.delete('/api/admin/crm/leads/:id',auth,(req,res)=>{
+  try { const crm=loadCrm(), count=crm.leads.length; crm.leads=crm.leads.filter(x=>x.id!==req.params.id); if(crm.leads.length===count)return res.status(404).json({error:'Lead not found.'}); saveCrm(crm); res.json({ok:true}); }
+  catch(err){ console.error('CRM lead delete failed:',err); res.status(500).json({error:'Lead could not be deleted.'}); }
+});
+app.post('/api/admin/crm/employees',auth,(req,res)=>{
+  try {
+    const b=req.body||{}, name=crmText(b.name,120), phone=crmText(b.phone,30).replace(/[^+0-9]/g,'');
+    if(!name) return res.status(400).json({error:'Employee name is required.'});
+    const crm=loadCrm(), employee={id:require('crypto').randomUUID(),name,phone,active:true,createdAt:new Date().toISOString()};
+    crm.employees.push(employee); saveCrm(crm); res.status(201).json({ok:true,employee});
+  } catch(err){ console.error('CRM employee create failed:',err); res.status(500).json({error:'Employee could not be saved.'}); }
+});
+app.delete('/api/admin/crm/employees/:id',auth,(req,res)=>{
+  try { const crm=loadCrm(), employee=crm.employees.find(x=>x.id===req.params.id); if(!employee)return res.status(404).json({error:'Employee not found.'}); employee.active=false; saveCrm(crm); res.json({ok:true}); }
+  catch(err){ console.error('CRM employee update failed:',err); res.status(500).json({error:'Employee could not be updated.'}); }
+});
+app.get('/admin/crm',(_req,res)=>res.sendFile(path.join(__dirname,'crm.html')));
+
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.use((err, _req, res, _next) => {
   res.status(400).json({error: err.message || 'Request failed.'});
