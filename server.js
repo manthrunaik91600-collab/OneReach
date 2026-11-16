@@ -253,9 +253,9 @@ const CRM_FILE = path.join(DATA_DIR, 'crm-data.json');
 function loadCrm() {
   try {
     const value = JSON.parse(fs.readFileSync(CRM_FILE, 'utf8'));
-    return { leads:Array.isArray(value.leads)?value.leads:[], employees:Array.isArray(value.employees)?value.employees:[] };
+    return { leads:Array.isArray(value.leads)?value.leads:[], employees:Array.isArray(value.employees)?value.employees:[], messages:Array.isArray(value.messages)?value.messages:[] };
   } catch (err) {
-    if (err.code === 'ENOENT') return {leads:[],employees:[]};
+    if (err.code === 'ENOENT') return {leads:[],employees:[],messages:[]};
     throw err;
   }
 }
