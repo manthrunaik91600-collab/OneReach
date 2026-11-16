@@ -258,10 +258,17 @@ function saveWhatsappEvent(event) {
   crm.messages=Array.isArray(crm.messages)?crm.messages:[];
   if(event.messageId && crm.messages.some(x=>x.messageId===event.messageId)) return;
   const digits=String(event.from||'').replace(/\\D/g,'');
-  const lead=crm.leads.find(x=>{const p=String(x.phone||'').replace(/\\D/g,'');return p && (p.endsWith(digits)||digits.endsWith(p));});
-  const record={id:require('crypto').randomUUID(),messageId:event.messageId||'',from:event.from||'',contactName:event.contactName||'',text:event.text||'',messageType:event.messageType||'unknown',timestamp:event.timestamp||new Date().toISOString(),direction:'inbound',leadId:lead?lead.id:null,status:'received'};
+  let lead=crm.leads.find(x=>{const p=String(x.phone||'').replace(/\\D/g,'');return p && (p.endsWith(digits)||digits.endsWith(p));});
+  const record={id:require('crypto').randomUUID(),messageId:event.messageId||'',from:event.from||'',contactName:event.contactName||'',text:event.text||'',messageType:event.messageType||'unknown',timestamp:event.timestamp||new Date().toISOString(),direction:'inbound',leadId:null,status:'received'};
+  if(!lead){
+    const now=new Date().toISOString();
+    lead={id:require('crypto').randomUUID(),name:event.contactName||event.from||'WhatsApp Customer',phone:event.from||'',service:'',area:'',requirement:'',source:'WhatsApp',sourceDetail:'Incoming WhatsApp message',status:'New',qualified:false,assignedTo:'',assignedDate:'',firstFollowUpDate:'',nextFollowUpDate:'',expectedCloseDate:'',notes:'',activities:[{at:now,action:'WhatsApp enquiry received',details:(event.text||'Incoming '+(event.messageType||'message')).slice(0,500)}],createdAt:now,updatedAt:now};
+    crm.leads.unshift(lead);
+  } else {
+    lead.lastWhatsappMessageAt=record.timestamp;lead.updatedAt=new Date().toISOString();lead.activities=Array.isArray(lead.activities)?lead.activities:[];lead.activities.unshift({at:new Date().toISOString(),action:'WhatsApp message received',details:(record.text||'Incoming '+record.messageType).slice(0,500)});
+  }
+  record.leadId=lead.id;
   crm.messages.unshift(record);
-  if(lead){lead.lastWhatsappMessageAt=record.timestamp;lead.updatedAt=new Date().toISOString();lead.activities=Array.isArray(lead.activities)?lead.activities:[];lead.activities.unshift({at:new Date().toISOString(),action:'WhatsApp message received',details:(record.text||'Incoming '+record.messageType).slice(0,500)});}
   saveCrm(crm);
 }
 app.get('/webhooks/whatsapp',(req,res)=>{
