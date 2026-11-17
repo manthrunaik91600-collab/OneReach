@@ -53,7 +53,8 @@ function renderServices(services) {
     'villas-buy-sell':'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85',
     'gold-loan':'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=1000&q=85',
     'transport-service':'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=1000&q=85',
-    'vyapar-software':'https://vyaparwebsiteimages.vypcdn.in/marketing-images/images/invoice-generator-content-revamp/ig-hero-v2.webp'
+    'vyapar-software':'https://vyaparwebsiteimages.vypcdn.in/marketing-images/images/invoice-generator-content-revamp/ig-hero-v2.webp',
+    'ghmc-municipal-services':'/service-15-ghmc.svg'
   };
   $('#serviceGrid').innerHTML = services.map((s,i)=>{
     const displayTitle = s.id === 'kotak' ? 'Kotak Bank 811 Account' : s.title;
