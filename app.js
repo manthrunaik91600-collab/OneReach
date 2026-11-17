@@ -37,7 +37,8 @@ function englishEnquiryMessage(service) {
     'villas-buy-sell':'Hi One Reach, I am interested in buying or selling a villa. Please contact me to discuss location and budget.',
     'gold-loan':'Hi One Reach, I am interested in a Gold Loan. Please share available options, eligibility and terms.',
     'transport-service':'Hi One Reach, I am interested in Transport Services. Please contact me to discuss pickup, delivery and load requirements.',
-    'vyapar-software':'Hi One Reach, I am interested in Vyapar Billing & Accounting Software. Please share available plans, pricing, features and demo details.'
+    'vyapar-software':'Hi One Reach, I am interested in Vyapar Billing & Accounting Software. Please share available plans, pricing, features and demo details.',
+    'ghmc-municipal-services':'Hi One Reach, I need assistance with GHMC / Municipal Services. My requirement is: Building Permission / Regular LRS Work / Water Connection / OC or Mortgage Release / Layout Permission / Registration Work / Old-date LRS (2007–2008). Please contact me to discuss the documents and process.'
   };
   const intro = messages[service.id] || `Hi One Reach, I am interested in ${service.title}. Please share details and the next steps.`;
   return `${intro}\n\nTo help One Reach understand my enquiry, here are my details:\nName: \nMy WhatsApp number: \nArea / City: \nExact requirement: \nBudget / Quantity (if applicable): \nPreferred contact time: `;
