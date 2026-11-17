@@ -39,7 +39,8 @@ function englishEnquiryMessage(service) {
     'transport-service':'Hi One Reach, I am interested in Transport Services. Please contact me to discuss pickup, delivery and load requirements.',
     'vyapar-software':'Hi One Reach, I am interested in Vyapar Billing & Accounting Software. Please share available plans, pricing, features and demo details.'
   };
-  return messages[service.id] || `Hi One Reach, I am interested in ${service.title}. Please share details and the next steps.`;
+  const intro = messages[service.id] || `Hi One Reach, I am interested in ${service.title}. Please share details and the next steps.`;
+  return `${intro}\n\nTo help One Reach understand my enquiry, here are my details:\nName: \nMy WhatsApp number: \nArea / City: \nExact requirement: \nBudget / Quantity (if applicable): \nPreferred contact time: `;
 }
 function renderServices(services) {
   const referenceImages = {
