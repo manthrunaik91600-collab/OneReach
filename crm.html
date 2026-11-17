@@ -7,13 +7,12 @@
 <section id="workspace" hidden>
 <div class="heading"><div><span class="eyebrow">CUSTOMER RELATIONSHIP MANAGEMENT</span><h1>Enquiries & Follow-ups</h1><p>Qualify each customer first. Assign only confirmed, interested leads to your team.</p></div><button id="logout" class="secondary">Sign out</button></div>
 <div class="metrics"><article><small>Total leads</small><strong id="mTotal">0</strong></article><article><small>New / unqualified</small><strong id="mNew">0</strong></article><article><small>Follow-ups due</small><strong id="mDue">0</strong></article><article><small>Converted</small><strong id="mWon">0</strong></article></div>
-<nav class="tabs"><button class="active" data-view="leads">All Leads</button><button data-view="whatsapp">WhatsApp Inbox</button><button data-view="followups">Follow-ups</button><button data-view="employees">Team Members</button></nav>
+<nav class="tabs"><button class="active" data-view="leads">All Leads</button><button data-view="followups">Follow-ups</button><button data-view="employees">Team Members</button></nav>
 <section id="leadsView" class="panel">
 <div class="panel-head"><div><h2>Customer Leads</h2><p>WhatsApp enquiries and manually entered enquiries</p></div><div class="actions"><button id="export" class="secondary">Export CSV</button><button id="newLead" class="primary">＋ Add Enquiry</button></div></div>
 <div class="filters"><input id="search" placeholder="Search name, phone, service or area"><select id="statusFilter"><option value="">All statuses</option><option>New</option><option>Contacted</option><option>Qualified</option><option>Assigned</option><option>Follow-up Required</option><option>Converted</option><option>Not Interested</option><option>Lost</option></select><select id="serviceFilter"><option value="">All services</option></select></div>
 <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Service / Area</th><th>Source</th><th>Status</th><th>Assigned To</th><th>Next Follow-up</th><th>Action</th></tr></thead><tbody id="leadRows"><tr><td colspan="7">Loading CRM…</td></tr></tbody></table></div>
 </section>
-<section id="whatsappView" class="panel" hidden><div class="panel-head"><div><h2>WhatsApp Inbox</h2><p>Incoming WhatsApp messages captured through Meta Cloud API. New senders are automatically added as CRM leads.</p></div><button id="refreshWhatsapp" class="secondary">Refresh Inbox</button></div><div id="whatsappList" class="follow-list"><p>Loading WhatsApp messages…</p></div></section>
 <section id="followupsView" class="panel" hidden><div class="panel-head"><div><h2>Follow-up Manager</h2><p>Today's and overdue customer follow-ups</p></div></div><div id="followupList" class="follow-list"></div></section>
 <section id="employeesView" class="panel" hidden><div class="panel-head"><div><h2>Team Members</h2><p>Add the people who will receive assigned leads.</p></div></div><form id="employeeForm" class="inline-form"><label>Employee name<input name="name" required placeholder="Full name"></label><label>Mobile number<input name="phone" placeholder="Phone number"></label><button class="primary">＋ Add Team Member</button></form><div id="employeeList" class="employee-list"></div></section>
 </section>
@@ -29,5 +28,7 @@
 <label>First follow-up date<input name="firstFollowUpDate" type="date"></label><label>Next follow-up date<input name="nextFollowUpDate" type="date"></label><label>Expected completion date<input name="expectedCloseDate" type="date"></label>
 <label class="wide">Notes / conversation update<textarea name="notes" rows="3" placeholder="Customer discussion, next action, important details..."></textarea></label>
 <label class="wide">Add activity note (for update)<input name="activity" placeholder="e.g. Spoke to customer; requested quotation"></label>
+<label class="wide">WhatsApp recipient number (with country code if outside India)<input id="whatsappRecipient" type="tel" placeholder="Enter number to receive these lead details"></label>
+<div class="wide"><button type="button" class="secondary" id="sendLeadWhatsApp">Open WhatsApp with Lead Details</button><small class="hint">WhatsApp opens with the lead details pre-filled. Review and press Send in WhatsApp.</small></div>
 </div><p id="formError" class="error"></p><div class="dialog-actions"><button type="button" class="secondary" id="cancelDialog">Cancel</button><button class="primary" id="saveLead">Save Enquiry</button></div></form></dialog>
 <div id="toast" role="status"></div><script src="/crm.js"></script></body></html>
