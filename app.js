@@ -7,6 +7,7 @@ function escapeHtml(s='') {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 const FALLBACK_SERVICES = [
+  {id:'bus-ticket-booking',title:'Bus Ticket Booking',subtitle:'Book bus tickets for your journey',description:'Enquire about bus options for your route. Share your travel date, passenger count and preferred bus type to check availability and fares with the operator.',image:'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1000&q=85',message:'Hi One Reach, I need help with bus ticket booking. From: __ To: __ Travel date: __ Passengers: __ Preferred bus type: __ Please share available options and fares.'},
  {id:'ezzygo',title:'EzzyGo Bidding For All Your Needs On Your Budget',subtitle:'Bidding for all your needs on your budget',description:'Share your requirement and budget to explore suitable options through EzzyGo.',message:'Hi One Reach, I am interested in EzzyGo Bidding for my needs and budget.'},
  {id:'loans',title:'Home Loan | Mortgage Loan | NRI Mortgage Loan | Loan Against Property',subtitle:'Home Loan • Mortgage Loan • NRI Mortgage Loan • Loan Against Property',description:'Enquire about home loans, mortgage loans, NRI mortgage loans and loan against property.',message:'Hi One Reach, I am interested in Home Loan / Mortgage Loan / NRI Mortgage Loan / Loan Against Property. Please contact me.'},
  {id:'act-fibernet',title:'ACT Fibernet New Connections',subtitle:'New ACT Fibernet connections',description:'Request information about a new ACT Fibernet connection and available plans.',message:'Hi One Reach, I am interested in a new ACT Fibernet connection. Please contact me.'},
@@ -24,6 +25,7 @@ const FALLBACK_SERVICES = [
 ];
 function englishEnquiryMessage(service) {
   const messages = {
+    'bus-ticket-booking':'Hi One Reach, I need help with bus ticket booking. From: __ To: __ Travel date: __ Number of passengers: __ Preferred bus type: __ Please share available options, fares and booking steps.',
     'ezzygo':'Hi One Reach, I am interested in EzzyGo Bidding for my needs and budget. Please share the next steps.',
     'loans':'Hi One Reach, I am interested in Home Loan / Mortgage Loan / NRI Mortgage Loan / Loan Against Property. Please share details and eligibility requirements.',
     'act-fibernet':'Hi One Reach, I am interested in a new ACT Fibernet connection. Please share available plans and service availability for my location.',
@@ -45,7 +47,7 @@ function englishEnquiryMessage(service) {
 }
 function renderServices(services) {
   const referenceImages = {
-    ezzygo:'/service-01.jpg', loans:'/service-02.jpg', leads:'/service-03.jpg',
+    'bus-ticket-booking':'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1000&q=85', ezzygo:'/service-01.jpg', loans:'/service-02.jpg', leads:'/service-03.jpg',
     kirana:'/service-04.jpg', 'act-fibernet':'/service-05.jpg', kotak:'/service-06.jpg',
     'credit-cards':'/service-07.jpg', bricks:'/service-08.jpg', precast:'/service-09.jpg', plots:'/service-10.jpg',
     'flats-buy-sell':'https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1000&q=85',
